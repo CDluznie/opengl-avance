@@ -14,6 +14,12 @@ int Application::run()
 {
     float clearColor[3] = { 0, 0, 0 };
     
+    glm::vec3 DirectionalLightDir(0.f,0.f,1.f);
+    glm::vec3 DirectionalLightIntensity(0.5f);
+	glm::vec3 PointLightPosition(2.5f, 0.f, -4.f);
+	glm::vec3 PointLightIntensity(2.5f);
+	glm::vec3 Kd(1.f);
+
     glmlv::ViewController viewController(m_GLFWHandle.window());
     
     glm::mat4 ProjMatrix = glm::perspective(glm::radians(70.f), float(m_nWindowWidth)/m_nWindowHeight, 0.1f, 100.f);
@@ -27,11 +33,21 @@ int Application::run()
 
         // rendering code
         
-		glm::mat4 GlobalMVMatrix = glm::translate(viewController.getViewMatrix(), glm::vec3(0.f, 0.f, -5.f));
+		glm::mat4 ViewMatrix = viewController.getViewMatrix();
+		glm::mat4 GlobalMVMatrix = glm::translate(ViewMatrix, glm::vec3(0.f, 0.f, -5.f));
 		glm::mat4 CubeMVMatrix = glm::scale(GlobalMVMatrix, glm::vec3(1.5f));
 		glm::mat4 CubeNormalMatrix = glm::transpose(glm::inverse(CubeMVMatrix));
 		glm::mat4 SphereMVMatrix = glm::translate(GlobalMVMatrix, glm::vec3(-2.f, 0.5f, -0.5f));
 		glm::mat4 SphereNormalMatrix = glm::transpose(glm::inverse(SphereMVMatrix));
+        
+        glm::vec3 lightDir = glm::vec3(ViewMatrix * glm::vec4(DirectionalLightDir,0));
+        glm::vec3 lightPos = glm::vec3(ViewMatrix * glm::vec4(PointLightPosition,1));
+        
+        glUniform3fv(uDirectionalLightDir, 1, glm::value_ptr(lightDir));
+		glUniform3fv(uDirectionalLightIntensity, 1, glm::value_ptr(DirectionalLightIntensity));
+		glUniform3fv(uPointLightPosition, 1, glm::value_ptr(lightPos));
+		glUniform3fv(uPointLightIntensity, 1, glm::value_ptr(PointLightIntensity));
+		glUniform3fv(uKd, 1, glm::value_ptr(Kd));
         
         glBindVertexArray(m_cubeVAO);
         
@@ -55,15 +71,45 @@ int Application::run()
         
         // GUI code:
         ImGui_ImplGlfwGL3_NewFrame();
-
         {
             ImGui::Begin("GUI");
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            ImGui::Separator();
             ImGui::ColorEditMode(ImGuiColorEditMode_RGB);
             if (ImGui::ColorEdit3("clearColor", clearColor)) {
                 glClearColor(clearColor[0], clearColor[1], clearColor[2], 1.f);
             }
-            ImGui::End();
+			ImGui::Separator();
+			if (ImGui::TreeNode("Directional Light"))
+			{
+				float tmpDirectionalLightDir[3] = {DirectionalLightDir.x, DirectionalLightDir.y, DirectionalLightDir.z};
+				float tmpDirectionalLightIntensity[3] = {DirectionalLightIntensity.x, DirectionalLightIntensity.y, DirectionalLightIntensity.z};
+				ImGui::InputFloat3("direction", tmpDirectionalLightDir);
+				ImGui::InputFloat3("intensity", tmpDirectionalLightIntensity);
+				ImGui::TreePop();
+				DirectionalLightDir = glm::vec3(tmpDirectionalLightDir[0],tmpDirectionalLightDir[1], tmpDirectionalLightDir[2]);
+				DirectionalLightIntensity = glm::vec3(tmpDirectionalLightIntensity[0],tmpDirectionalLightIntensity[1], tmpDirectionalLightIntensity[2]);
+			}
+			ImGui::Separator();
+			if (ImGui::TreeNode("Point Light"))
+			{
+				float tmpPointLightPosition[3] = {PointLightPosition.x, PointLightPosition.y, PointLightPosition.z};
+				float tmpPointLightIntensity[3] = {PointLightIntensity.x, PointLightIntensity.y, PointLightIntensity.z};
+				ImGui::InputFloat3("position", tmpPointLightPosition);
+				ImGui::InputFloat3("intensity", tmpPointLightIntensity);
+				ImGui::TreePop();
+				PointLightPosition = glm::vec3(tmpPointLightPosition[0],tmpPointLightPosition[1], tmpPointLightPosition[2]);
+				PointLightIntensity = glm::vec3(tmpPointLightIntensity[0],tmpPointLightIntensity[1], tmpPointLightIntensity[2]);
+			}
+			ImGui::Separator();
+			if (ImGui::TreeNode("Light Color"))
+			{
+				float tmpKd[3] = {Kd.x, Kd.y, Kd.z};
+				ImGui::InputFloat3("color", tmpKd);
+				ImGui::TreePop();
+				Kd = glm::vec3(tmpKd[0],tmpKd[1], tmpKd[2]);
+			}
+			ImGui::End();
         }
 
         const auto viewportSize = m_GLFWHandle.framebufferSize();
@@ -166,7 +212,12 @@ Application::Application(int argc, char** argv):
     uModelViewProjMatrix = glGetUniformLocation(m_program.glId(), "uModelViewProjMatrix");
     uModelViewMatrix = glGetUniformLocation(m_program.glId(), "uModelViewMatrix");
     uNormalMatrix = glGetUniformLocation(m_program.glId(), "uNormalMatrix");
-    
+    uDirectionalLightDir = glGetUniformLocation(m_program.glId(), "uDirectionalLightDir");
+    uDirectionalLightIntensity = glGetUniformLocation(m_program.glId(), "uDirectionalLightIntensity");
+	uPointLightPosition = glGetUniformLocation(m_program.glId(), "uPointLightPosition");
+	uPointLightIntensity = glGetUniformLocation(m_program.glId(), "uPointLightIntensity");
+	uKd = glGetUniformLocation(m_program.glId(), "uKd");
+	
     m_program.use();
     
 }

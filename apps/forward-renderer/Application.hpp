@@ -37,4 +37,9 @@ private:
     GLint uModelViewProjMatrix;
     GLint uModelViewMatrix;
     GLint uNormalMatrix;
+    GLint uDirectionalLightDir;
+    GLint uDirectionalLightIntensity;
+	GLint uPointLightPosition;
+	GLint uPointLightIntensity;
+	GLint uKd;
 };
