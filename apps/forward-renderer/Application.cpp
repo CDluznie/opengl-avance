@@ -4,6 +4,7 @@
 
 #include <imgui.h>
 #include <glmlv/imgui_impl_glfw_gl3.hpp>
+#include <glmlv/Image2DRGBA.hpp>
 #include <glmlv/simple_geometry.hpp>
 #include <glmlv/ViewController.hpp>
 
@@ -37,7 +38,7 @@ int Application::run()
 		glm::mat4 GlobalMVMatrix = glm::translate(ViewMatrix, glm::vec3(0.f, 0.f, -5.f));
 		glm::mat4 CubeMVMatrix = glm::scale(GlobalMVMatrix, glm::vec3(1.5f));
 		glm::mat4 CubeNormalMatrix = glm::transpose(glm::inverse(CubeMVMatrix));
-		glm::mat4 SphereMVMatrix = glm::translate(GlobalMVMatrix, glm::vec3(-2.f, 0.5f, -0.5f));
+		glm::mat4 SphereMVMatrix = glm::rotate(glm::translate(GlobalMVMatrix, glm::vec3(-2.f, 0.5f, -0.5f)), glm::radians(180.f), glm::vec3(1.f, 0.f, 0.f));
 		glm::mat4 SphereNormalMatrix = glm::transpose(glm::inverse(SphereMVMatrix));
         
         glm::vec3 lightDir = glm::vec3(ViewMatrix * glm::vec4(DirectionalLightDir,0));
@@ -49,11 +50,17 @@ int Application::run()
 		glUniform3fv(uPointLightIntensity, 1, glm::value_ptr(PointLightIntensity));
 		glUniform3fv(uKd, 1, glm::value_ptr(Kd));
         
+        glActiveTexture(GL_TEXTURE0);
+        glUniform1i(uKdSampler, 0);
+        glBindSampler(0, m_samplerObject);
+        
         glBindVertexArray(m_cubeVAO);
         
 		glUniformMatrix4fv(uModelViewProjMatrix, 1, GL_FALSE, glm::value_ptr(ProjMatrix * CubeMVMatrix));
 		glUniformMatrix4fv(uModelViewMatrix, 1, GL_FALSE, glm::value_ptr(CubeMVMatrix));
 		glUniformMatrix4fv(uNormalMatrix, 1, GL_FALSE, glm::value_ptr(CubeNormalMatrix));
+		
+        glBindTexture(GL_TEXTURE_2D, m_cubeTexObject);
         
         glDrawElements(GL_TRIANGLES, m_cube_vertex_number, GL_UNSIGNED_INT, nullptr);
         
@@ -64,6 +71,8 @@ int Application::run()
 		glUniformMatrix4fv(uModelViewProjMatrix, 1, GL_FALSE, glm::value_ptr(ProjMatrix * SphereMVMatrix));
 		glUniformMatrix4fv(uModelViewMatrix, 1, GL_FALSE, glm::value_ptr(SphereMVMatrix));
 		glUniformMatrix4fv(uNormalMatrix, 1, GL_FALSE, glm::value_ptr(SphereNormalMatrix));
+		
+        glBindTexture(GL_TEXTURE_2D, m_sphereTexObject);
         
         glDrawElements(GL_TRIANGLES, m_sphere_vertex_number, GL_UNSIGNED_INT, nullptr);
         
@@ -136,8 +145,9 @@ Application::Application(int argc, char** argv):
     m_AppPath { glmlv::fs::path{ argv[0] } },
     m_AppName { m_AppPath.stem().string() },
     m_ImGuiIniFilename { m_AppName + ".imgui.ini" },
-    m_ShadersRootPath { m_AppPath.parent_path() / "shaders" }
-    
+    m_ShadersRootPath { m_AppPath.parent_path() / "shaders" },
+	m_AssetsRootPath{ m_AppPath.parent_path() / "assets" }  
+  
 {	
     ImGui::GetIO().IniFilename = m_ImGuiIniFilename.c_str(); // At exit, ImGUI will store its windows positions in this file
 
@@ -217,6 +227,30 @@ Application::Application(int argc, char** argv):
 	uPointLightPosition = glGetUniformLocation(m_program.glId(), "uPointLightPosition");
 	uPointLightIntensity = glGetUniformLocation(m_program.glId(), "uPointLightIntensity");
 	uKd = glGetUniformLocation(m_program.glId(), "uKd");
+	uKdSampler = glGetUniformLocation(m_program.glId(), "uKdSampler");
+	
+	// --- Textures init ---
+	
+	auto image_cube = glmlv::readImage(m_AssetsRootPath / m_AppName / "textures" / "box.jpg");
+	auto image_sphere = glmlv::readImage(m_AssetsRootPath / m_AppName / "textures" / "earth.jpg");
+
+	glActiveTexture(GL_TEXTURE0);
+	glGenTextures(1, &m_cubeTexObject);
+	glBindTexture(GL_TEXTURE_2D, m_cubeTexObject);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, image_cube.width(), image_cube.height());
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image_cube.width(), image_cube.height(), GL_RGBA, GL_UNSIGNED_BYTE, image_cube.data());
+	glBindTexture(GL_TEXTURE_2D, 0);
+	
+	glActiveTexture(GL_TEXTURE0);
+	glGenTextures(1, &m_sphereTexObject);
+	glBindTexture(GL_TEXTURE_2D, m_sphereTexObject);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, image_sphere.width(), image_sphere.height());
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image_sphere.width(), image_sphere.height(), GL_RGBA, GL_UNSIGNED_BYTE, image_sphere.data());
+	glBindTexture(GL_TEXTURE_2D, 0);
+	
+	glGenSamplers(1, &m_samplerObject);
+	glSamplerParameteri(m_samplerObject, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glSamplerParameteri(m_samplerObject, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	
     m_program.use();
     
@@ -229,6 +263,9 @@ Application::~Application() {
 	glDeleteBuffers(1, &m_sphereIBO);
     glDeleteBuffers(1, &m_cubeVAO);
     glDeleteBuffers(1, &m_sphereVAO);
+    glDeleteTextures(1, &m_cubeTexObject);
+    glDeleteTextures(1, &m_sphereTexObject);
+	glDeleteSamplers(1, &m_samplerObject);
     ImGui_ImplGlfwGL3_Shutdown();
     glfwTerminate();
 }

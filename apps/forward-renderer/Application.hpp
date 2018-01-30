@@ -21,6 +21,7 @@ private:
     const std::string m_AppName;
     const std::string m_ImGuiIniFilename;
     const glmlv::fs::path m_ShadersRootPath;
+    const glmlv::fs::path m_AssetsRootPath;
     
     GLuint m_cubeVBO;
     GLuint m_cubeIBO;
@@ -32,6 +33,10 @@ private:
     GLuint m_sphereVAO;
     int m_sphere_vertex_number;
     
+    GLuint m_cubeTexObject;
+    GLuint m_sphereTexObject;
+    GLuint m_samplerObject;
+    
     glmlv::GLProgram m_program;
     
     GLint uModelViewProjMatrix;
@@ -42,4 +47,6 @@ private:
 	GLint uPointLightPosition;
 	GLint uPointLightIntensity;
 	GLint uKd;
+	GLint uKdSampler;
+	
 };
