@@ -50,6 +50,15 @@ int Application::run()
 		glUniform3fv(uPointLightPosition, 1, glm::value_ptr(lightPos));
 		glUniform3fv(uPointLightIntensity, 1, glm::value_ptr(PointLightIntensity));
 		
+		LightInfos lightInfos;
+		lightInfos.directional_light_dirs = lightDir;
+		lightInfos.directional_light_intensities = DirectionalLightIntensity;
+		lightInfos.point_light_positions = lightPos;
+		lightInfos.point_light_intensities = PointLightIntensity;
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboLightInfos);
+		glNamedBufferSubData(ssboLightInfos, 0, sizeof(LightInfos), &lightInfos);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+		
         glUniform1i(uKaSampler, 0);
         glUniform1i(uKdSampler, 1);
         glUniform1i(uKsSampler, 2);
@@ -135,9 +144,33 @@ int Application::run()
 				float tmpDirectionalLightIntensity[3] = {DirectionalLightIntensity.x, DirectionalLightIntensity.y, DirectionalLightIntensity.z};
 				ImGui::InputFloat3("direction", tmpDirectionalLightDir);
 				ImGui::InputFloat3("intensity", tmpDirectionalLightIntensity);
-				ImGui::TreePop();
 				DirectionalLightDir = glm::vec3(tmpDirectionalLightDir[0],tmpDirectionalLightDir[1], tmpDirectionalLightDir[2]);
 				DirectionalLightIntensity = glm::vec3(tmpDirectionalLightIntensity[0],tmpDirectionalLightIntensity[1], tmpDirectionalLightIntensity[2]);
+				ImGui::Separator();
+				
+				for (int i = 0; i < m_DirectionalLightNumber; i++) {
+					float tmpDirectionalLightDir[3] = {m_DirectionalLightDirs[i].x, m_DirectionalLightDirs[i].y, m_DirectionalLightDirs[i].z};
+					float tmpDirectionalLightIntensity[3] = {m_DirectionalLightItensities[i].x, m_DirectionalLightItensities[i].y, m_DirectionalLightItensities[i].z};
+					std::string direction_label = "direction " + std::to_string(i+1);
+					ImGui::InputFloat3(direction_label.c_str(), tmpDirectionalLightDir);
+					std::string intensity_label = "intensity " + std::to_string(i+1);
+					ImGui::InputFloat3(intensity_label.c_str(), tmpDirectionalLightIntensity);
+					m_DirectionalLightDirs[i] = glm::vec3(tmpDirectionalLightDir[0],tmpDirectionalLightDir[1], tmpDirectionalLightDir[2]);
+					m_DirectionalLightItensities[i] = glm::vec3(tmpDirectionalLightIntensity[0],tmpDirectionalLightIntensity[1], tmpDirectionalLightIntensity[2]);
+					ImGui::Separator();
+				}
+				
+				if (ImGui::Button("Add light")) {
+					m_DirectionalLightDirs.push_back(glm::vec3(0.f));
+					m_DirectionalLightItensities.push_back(glm::vec3(0.f));
+					m_DirectionalLightNumber++;
+				}
+				if (ImGui::Button("Remove light") && m_DirectionalLightNumber > 0) {
+					m_DirectionalLightDirs.pop_back();
+					m_DirectionalLightItensities.pop_back();
+					m_DirectionalLightNumber--;
+				}
+				ImGui::TreePop();
 			}
 			ImGui::Separator();
 			if (ImGui::TreeNode("Point Light"))
@@ -198,6 +231,11 @@ Application::Application(int argc, char** argv):
 	m_bboxMax = objectData.bboxMax;
 	m_bboxMin = objectData.bboxMin;
 	
+	m_DirectionalLightNumber = 0;
+	m_DirectionalLightDirs = {};
+    m_DirectionalLightItensities = {};
+	m_PointlLightNumber = 0;
+	
 	// --- VBO init ---
 
 	glGenBuffers(1, &m_VBO);
@@ -241,8 +279,10 @@ Application::Application(int argc, char** argv):
     uModelViewProjMatrix = glGetUniformLocation(m_program.glId(), "uModelViewProjMatrix");
     uModelViewMatrix = glGetUniformLocation(m_program.glId(), "uModelViewMatrix");
     uNormalMatrix = glGetUniformLocation(m_program.glId(), "uNormalMatrix");
+    uDirectionalLightNumber = glGetUniformLocation(m_program.glId(), "uDirectionalLightNumber");
     uDirectionalLightDir = glGetUniformLocation(m_program.glId(), "uDirectionalLightDir");
     uDirectionalLightIntensity = glGetUniformLocation(m_program.glId(), "uDirectionalLightIntensity");
+	uPointLightNumber = glGetUniformLocation(m_program.glId(), "uPointLightNumber");
 	uPointLightPosition = glGetUniformLocation(m_program.glId(), "uPointLightPosition");
 	uPointLightIntensity = glGetUniformLocation(m_program.glId(), "uPointLightIntensity");
 	uKa = glGetUniformLocation(m_program.glId(), "uKa");
@@ -287,6 +327,30 @@ Application::Application(int argc, char** argv):
 	glBindSampler(3, m_samplerObject);
 	
     m_program.use();
+    
+    ///////////
+	
+ 	glGenBuffers(1, &ssboLightInfos); //TODO delete in destructor
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssboLightInfos); 
+	glNamedBufferStorage(ssboLightInfos, sizeof(LightInfos), NULL, GL_DYNAMIC_STORAGE_BIT);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, ssboLightInfos);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	
+	
+    /*GLuint ssbo = 0; 
+	glGenBuffers(1, &ssbo); 
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo); 
+	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(ssbo_data), &ssbo_data, GL_DYNAMIC_COPY); 
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo); 
+	GLvoid* p = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_WRITE_ONLY); 
+	memcpy(p, &ssbo_data, sizeof(ssbo_data));
+	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+	*/
+	//GLuint block_index = glGetProgramResourceIndex(m_program.glId(), GL_SHADER_STORAGE_BLOCK, "shader_data");
+	//GLuint ssbo_binding_point_index = 1; 
+	//glShaderStorageBlockBinding(m_program.glId(), block_index, ssbo_binding_point_index);
     
 }
 

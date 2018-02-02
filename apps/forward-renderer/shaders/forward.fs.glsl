@@ -1,4 +1,4 @@
-#version 330 core
+#version 430 
 
 in vec3 vViewSpacePosition;
 in vec3 vViewSpaceNormal;
@@ -6,11 +6,20 @@ in vec2 vTexCoords;
 
 out vec3 fColor;
 
+uniform vec3 uDirectionalLighNumber;
 uniform vec3 uDirectionalLightDir;
 uniform vec3 uDirectionalLightIntensity;
 
+uniform vec3 uPointLightNumber;
 uniform vec3 uPointLightPosition;
 uniform vec3 uPointLightIntensity;
+
+layout (std430, binding=1) buffer LightInfos { 
+	vec3 directional_light_dirs;
+	vec3 directional_light_intensities;
+	vec3 point_light_positions;
+	vec3 point_light_intensities;
+};
 
 uniform vec3 uKa;
 uniform vec3 uKd;
@@ -38,6 +47,7 @@ void main() {
 	float distToPointLight = length(uPointLightPosition - vViewSpacePosition);
 	vec3 dirToPointLight = uPointLightPosition - vViewSpacePosition;
 	vec3 intensityToPointLight = (uPointLightIntensity) / (distToPointLight*distToPointLight);
-	fColor = (blinnPhong(uDirectionalLightDir, uDirectionalLightIntensity) + blinnPhong(dirToPointLight, intensityToPointLight));
+	fColor = (blinnPhong(directional_light_dirs, directional_light_intensities) + blinnPhong(dirToPointLight, intensityToPointLight));
+	//fColor = directional_light_intensities;
 
 }
