@@ -3,6 +3,7 @@
 #include <glmlv/filesystem.hpp>
 #include <glmlv/GLFWHandle.hpp>
 #include <glmlv/GLProgram.hpp>
+#include <glmlv/load_obj.hpp>
 
 class Application
 {
@@ -23,19 +24,22 @@ private:
     const glmlv::fs::path m_ShadersRootPath;
     const glmlv::fs::path m_AssetsRootPath;
     
-    GLuint m_cubeVBO;
-    GLuint m_cubeIBO;
-    GLuint m_cubeVAO;
-    int m_cube_vertex_number;
-
-    GLuint m_sphereVBO;
-    GLuint m_sphereIBO;
-    GLuint m_sphereVAO;
-    int m_sphere_vertex_number;
+    GLuint m_VBO;
+    GLuint m_IBO;
+    GLuint m_VAO;
     
-    GLuint m_cubeTexObject;
-    GLuint m_sphereTexObject;
-    GLuint m_samplerObject;
+	glm::vec3 m_bboxMin;
+	glm::vec3 m_bboxMax;
+    
+    size_t m_shapeCount;
+    std::vector<uint32_t> m_indexCountPerShape;
+    std::vector<int32_t> m_materialIDPerShape;
+    
+    glmlv::ObjData::PhongMaterial m_default_material; // material without texture
+    std::vector<glmlv::ObjData::PhongMaterial> m_materials;
+    GLuint m_default_tex_object;
+    std::vector<GLuint> m_texObjects;
+	GLuint m_samplerObject;
     
     glmlv::GLProgram m_program;
     
@@ -46,7 +50,13 @@ private:
     GLint uDirectionalLightIntensity;
 	GLint uPointLightPosition;
 	GLint uPointLightIntensity;
+	GLint uKa;
 	GLint uKd;
+	GLint uKs;
+	GLint uShininess;
+	GLint uKaSampler;
 	GLint uKdSampler;
+	GLint uKsSampler;
+	GLint uShininessSampler;
 	
 };
