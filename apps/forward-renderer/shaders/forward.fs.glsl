@@ -6,19 +6,14 @@ in vec2 vTexCoords;
 
 out vec3 fColor;
 
-uniform vec3 uDirectionalLighNumber;
-uniform vec3 uDirectionalLightDir;
-uniform vec3 uDirectionalLightIntensity;
-
-uniform vec3 uPointLightNumber;
-uniform vec3 uPointLightPosition;
-uniform vec3 uPointLightIntensity;
+uniform int uDirectionalLightNumber;
+uniform int uPointLightNumber;
 
 layout (std430, binding=1) buffer LightInfos { 
-	vec3 directional_light_dirs;
-	vec3 directional_light_intensities;
-	vec3 point_light_positions;
-	vec3 point_light_intensities;
+	vec4 directional_light_dirs[40];
+	vec4 directional_light_intensities[40];
+	vec4 point_light_positions[40];
+	vec4 point_light_intensities[40];
 };
 
 uniform vec3 uKa;
@@ -44,10 +39,29 @@ vec3 blinnPhong(vec3 lightDir, vec3 lightIntensity) {
 
 void main() {
 
-	float distToPointLight = length(uPointLightPosition - vViewSpacePosition);
-	vec3 dirToPointLight = uPointLightPosition - vViewSpacePosition;
-	vec3 intensityToPointLight = (uPointLightIntensity) / (distToPointLight*distToPointLight);
-	fColor = (blinnPhong(directional_light_dirs, directional_light_intensities) + blinnPhong(dirToPointLight, intensityToPointLight));
-	//fColor = directional_light_intensities;
+	// Directional lights
+
+	vec3 CumulatedDirectionalLight = vec3(0);
+	
+	for (int i = 0; i < uDirectionalLightNumber; i++) {
+		vec3 DirectionalLightDir = directional_light_dirs[i].xyz;
+		vec3 DirectionalLightIntensity = directional_light_intensities[i].xyz;
+		CumulatedDirectionalLight += blinnPhong(DirectionalLightDir, DirectionalLightIntensity);
+	}
+	
+	// Point lights
+	
+	vec3 CumulatedPointLight = vec3(0);
+	
+	for (int i = 0; i < uPointLightNumber; i++) {
+		vec3 PointLightPos = point_light_positions[i].xyz;
+		vec3 PointLightIntensity = point_light_intensities[i].xyz;
+		float distToPointLight = length(PointLightPos - vViewSpacePosition);
+		vec3 dirToPointLight = PointLightPos - vViewSpacePosition;
+		vec3 intensityToPointLight = (PointLightIntensity) / (distToPointLight*distToPointLight);
+		CumulatedPointLight += blinnPhong(dirToPointLight, intensityToPointLight);
+	}
+	
+	fColor = CumulatedDirectionalLight + CumulatedPointLight;
 
 }

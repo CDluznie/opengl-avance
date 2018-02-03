@@ -11,14 +11,11 @@ public:
 
 	static const int MAX_LIGHT = 40;
 
-	struct LightInfos { //TODO maybe only use vec4
-		glm::vec3 directional_light_dirs;
-		float _align1; // TODO for memory align, maybe rm
-		glm::vec3 directional_light_intensities;
-		float _align2; // TODO for memory align, maybe rm
-		glm::vec3 point_light_positions;
-		float _align3; // TODO for memory align, maybe rm
-		glm::vec3 point_light_intensities;
+	struct LightInfos { // vec4 for memory alignment
+		glm::vec4 directional_light_dirs[MAX_LIGHT];
+		glm::vec4 directional_light_intensities[MAX_LIGHT];
+		glm::vec4 point_light_positions[MAX_LIGHT];
+		glm::vec4 point_light_intensities[MAX_LIGHT];
 	};
 
     Application(int argc, char** argv);
@@ -48,11 +45,6 @@ private:
     std::vector<uint32_t> m_indexCountPerShape;
     std::vector<int32_t> m_materialIDPerShape;
     
-    int m_DirectionalLightNumber;
-    std::vector<glm::vec3> m_DirectionalLightDirs;
-    std::vector<glm::vec3> m_DirectionalLightItensities;
-    int m_PointlLightNumber;
-    
     glmlv::ObjData::PhongMaterial m_default_material; // material without texture
     std::vector<glmlv::ObjData::PhongMaterial> m_materials;
     GLuint m_default_tex_object;
@@ -64,14 +56,8 @@ private:
     GLint uModelViewProjMatrix;
     GLint uModelViewMatrix;
     GLint uNormalMatrix;
-    
     GLint uDirectionalLightNumber;
-    GLint uDirectionalLightDir;
-    GLint uDirectionalLightIntensity;
 	GLint uPointLightNumber;
-	GLint uPointLightPosition;
-	GLint uPointLightIntensity;
-	
 	GLint uKa;
 	GLint uKd;
 	GLint uKs;
