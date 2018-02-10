@@ -414,7 +414,7 @@ Application::Application(int argc, char** argv):
 	glBindSampler(1, m_samplerObject);
 	glBindSampler(2, m_samplerObject);
 	glBindSampler(3, m_samplerObject);
-	glBindSampler(4, m_samplerObject);//TODOOOOOOOO
+	glBindSampler(4, m_samplerObject);
     
     //--- SSBO init for lights --- 
     
@@ -460,6 +460,7 @@ Application::~Application() {
     glDeleteBuffers(1, &ssboLightInfos);
     glDeleteTextures(m_texObjects.size(), m_texObjects.data());
     glDeleteTextures(m_default_tex_object, &m_default_tex_object);
+    glDeleteTextures(GBufferTextureCount, m_GBufferTextures);
     glDeleteSamplers(1, &m_samplerObject);
     ImGui_ImplGlfwGL3_Shutdown();
     glfwTerminate();
