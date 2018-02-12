@@ -43,7 +43,8 @@ private:
     const glmlv::fs::path m_ShadersRootPath;
     const glmlv::fs::path m_AssetsRootPath;
     
-    DemoSceneObject m_sceneObject;
+
+    std::vector<DemoSceneObject> m_sceneObjects;
 
 
     GLuint m_GVBO;
@@ -68,7 +69,7 @@ private:
     
     glmlv::ObjData::PhongMaterial m_default_material; // material without texture
     GLuint m_default_tex_object;
-    
+
 	GLuint m_samplerObject;
 
 	GLuint m_directionalSMTexture;
@@ -111,9 +112,9 @@ private:
 	GLuint ssboLightInfos;
 
 
-	DemoSceneObject createDemoSceneObject();
+	static DemoSceneObject createDemoSceneObject(const glmlv::fs::path & objPath);
 
-	void deleteDemoSceneObject(DemoSceneObject & sceneObject);
+	static void deleteDemoSceneObject(DemoSceneObject & sceneObject);
 
 	void geometryPass(glm::mat4 ProjMatrix, glm::mat4 ViewMatrix, glm::mat4 MVMatrix, glm::mat4 NormalMatrix);
 

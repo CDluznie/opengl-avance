@@ -12,10 +12,12 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/io.hpp>
 
+#include <algorithm> 
 
-Application::DemoSceneObject Application::createDemoSceneObject() {
+
+Application::DemoSceneObject Application::createDemoSceneObject(const glmlv::fs::path & objPath) {
 	Application::DemoSceneObject sceneObject;
-	glmlv::loadObj(m_AssetsRootPath / m_AppName / "models" / "sponza" / "sponza.obj", sceneObject.objectData);
+	glmlv::loadObj(objPath, sceneObject.objectData);
 	glGenBuffers(1, &sceneObject.VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, sceneObject.VBO);
     glBufferStorage(GL_ARRAY_BUFFER, sceneObject.objectData.vertexBuffer.size()*sizeof(glmlv::Vertex3f3f2f), sceneObject.objectData.vertexBuffer.data(), 0);
@@ -81,69 +83,73 @@ void Application::geometryPass(glm::mat4 ProjMatrix, glm::mat4 ViewMatrix, glm::
 	glUniform1i(uKdSampler, 1);
 	glUniform1i(uKsSampler, 2);
 	glUniform1i(uShininessSampler, 3);
-		
-	glBindVertexArray(m_sceneObject.VAO);
-        
-	glUniformMatrix4fv(uModelViewProjMatrix, 1, GL_FALSE, glm::value_ptr(ProjMatrix * MVMatrix));
-	glUniformMatrix4fv(uModelViewMatrix, 1, GL_FALSE, glm::value_ptr(MVMatrix));
-	glUniformMatrix4fv(uNormalMatrix, 1, GL_FALSE, glm::value_ptr(NormalMatrix));
-        
-	auto indexOffset = 0;
-	for (int i = 0; i < m_sceneObject.objectData.shapeCount; i++) {
-		glmlv::ObjData::PhongMaterial material;
-		const auto indexMaterial = m_sceneObject.objectData.materialIDPerShape[i];
-		if (indexMaterial == -1) { // Use a default mat
-			material = m_default_material;
-		} else {
-			material = m_sceneObject.objectData.materials[indexMaterial];
+	
+	for (const auto & sceneObject : m_sceneObjects) {
+	
+		glBindVertexArray(sceneObject.VAO);
+	        
+		glUniformMatrix4fv(uModelViewProjMatrix, 1, GL_FALSE, glm::value_ptr(ProjMatrix * MVMatrix));
+		glUniformMatrix4fv(uModelViewMatrix, 1, GL_FALSE, glm::value_ptr(MVMatrix));
+		glUniformMatrix4fv(uNormalMatrix, 1, GL_FALSE, glm::value_ptr(NormalMatrix));
+	        
+		auto indexOffset = 0;
+		for (int i = 0; i < sceneObject.objectData.shapeCount; i++) {
+			glmlv::ObjData::PhongMaterial material;
+			const auto indexMaterial = sceneObject.objectData.materialIDPerShape[i];
+			if (indexMaterial == -1) { // Use a default mat
+				material = m_default_material;
+			} else {
+				material = sceneObject.objectData.materials[indexMaterial];
+			}
+			// Ambiant light
+			GLuint KaTexture;
+			if (material.KaTextureId == -1) {
+				KaTexture = m_default_tex_object;
+			} else {
+				KaTexture = sceneObject.texObjects[material.KaTextureId];
+			}
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, KaTexture);
+			glUniform3fv(uKa, 1, glm::value_ptr(material.Ka));
+			// Diffuse light
+			GLuint KdTexture;
+			if (material.KdTextureId == -1) {
+				KdTexture = m_default_tex_object;
+			} else {
+				KdTexture = sceneObject.texObjects[material.KdTextureId];
+			}
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, KdTexture);
+			glUniform3fv(uKd, 1, glm::value_ptr(material.Kd));
+			// Glossy light
+			GLuint KsTexture;
+			if (material.KsTextureId == -1) {
+				KsTexture = m_default_tex_object;
+			} else {
+				KsTexture = sceneObject.texObjects[material.KsTextureId];
+			}
+			glActiveTexture(GL_TEXTURE2);
+			glBindTexture(GL_TEXTURE_2D, KsTexture);
+			glUniform3fv(uKs, 1, glm::value_ptr(material.Ks));
+			// Glossy exponent
+			GLuint ShininessTexture;
+			if (material.shininessTextureId == -1) {
+				ShininessTexture = m_default_tex_object;
+			} else {
+				ShininessTexture = sceneObject.texObjects[material.shininessTextureId];
+			}
+			glActiveTexture(GL_TEXTURE3);
+			glBindTexture(GL_TEXTURE_2D, ShininessTexture);
+			glUniform1f(uShininess, material.shininess);
+			// Render shape
+			const auto indexCount = sceneObject.objectData.indexCountPerShape[i];
+			glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, (const GLvoid*) (indexOffset * sizeof(GLuint)));
+			indexOffset += indexCount;
 		}
-		// Ambiant light
-		GLuint KaTexture;
-		if (material.KaTextureId == -1) {
-			KaTexture = m_default_tex_object;
-		} else {
-			KaTexture = m_sceneObject.texObjects[material.KaTextureId];
-		}
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, KaTexture);
-		glUniform3fv(uKa, 1, glm::value_ptr(material.Ka));
-		// Diffuse light
-		GLuint KdTexture;
-		if (material.KdTextureId == -1) {
-			KdTexture = m_default_tex_object;
-		} else {
-			KdTexture = m_sceneObject.texObjects[material.KdTextureId];
-		}
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, KdTexture);
-		glUniform3fv(uKd, 1, glm::value_ptr(material.Kd));
-		// Glossy light
-		GLuint KsTexture;
-		if (material.KsTextureId == -1) {
-			KsTexture = m_default_tex_object;
-		} else {
-			KsTexture = m_sceneObject.texObjects[material.KsTextureId];
-		}
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, KsTexture);
-		glUniform3fv(uKs, 1, glm::value_ptr(material.Ks));
-		// Glossy exponent
-		GLuint ShininessTexture;
-		if (material.shininessTextureId == -1) {
-			ShininessTexture = m_default_tex_object;
-		} else {
-			ShininessTexture = m_sceneObject.texObjects[material.shininessTextureId];
-		}
-		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_2D, ShininessTexture);
-		glUniform1f(uShininess, material.shininess);
-		// Render shape
-		const auto indexCount = m_sceneObject.objectData.indexCountPerShape[i];
-		glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, (const GLvoid*) (indexOffset * sizeof(GLuint)));
-		indexOffset += indexCount;
-	}
 
-	glBindVertexArray(0);
+		glBindVertexArray(0);
+
+	}
 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); 
 
@@ -232,17 +238,21 @@ void Application::computeShadowMap(glm::mat4 dirLightProjMatrix, glm::mat4 dirLi
 
 	glUniformMatrix4fv(uDirLightViewProjMatrix, 1, GL_FALSE, glm::value_ptr(dirLightProjMatrix * dirLightViewMatrix));
 	
-	glBindVertexArray(m_sceneObject.VAO);
+	for (const auto & sceneObject : m_sceneObjects) {
 
-	// We draw each shape by specifying how much indices it carries, and with an offset in the global index buffer
-	auto indexOffset = 0;
-	for (int i = 0; i < m_sceneObject.objectData.shapeCount; i++) {
-		const auto indexCount = m_sceneObject.objectData.indexCountPerShape[i];
-		glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, (const GLvoid*) (indexOffset * sizeof(GLuint)));
-		indexOffset += indexCount;
+		glBindVertexArray(sceneObject.VAO);
+
+		// We draw each shape by specifying how much indices it carries, and with an offset in the global index buffer
+		auto indexOffset = 0;
+		for (int i = 0; i < sceneObject.objectData.shapeCount; i++) {
+			const auto indexCount = sceneObject.objectData.indexCountPerShape[i];
+			glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, (const GLvoid*) (indexOffset * sizeof(GLuint)));
+			indexOffset += indexCount;
+		}
+
+		glBindVertexArray(0);
+
 	}
-
-	glBindVertexArray(0);
 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
@@ -430,26 +440,26 @@ Application::Application(int argc, char** argv):
     m_AppName { m_AppPath.stem().string() },
     m_ImGuiIniFilename { m_AppName + ".imgui.ini" },
     m_ShadersRootPath { m_AppPath.parent_path() / "shaders" },
-	m_AssetsRootPath{ m_AppPath.parent_path() / "assets" }  
+	m_AssetsRootPath{ m_AppPath.parent_path() / "assets" }
   
 {	
     ImGui::GetIO().IniFilename = m_ImGuiIniFilename.c_str(); // At exit, ImGUI will store its windows positions in this file
 
 	glEnable(GL_DEPTH_TEST);
 
+	m_sceneObjects.push_back(createDemoSceneObject(m_AssetsRootPath / m_AppName / "models" / "sponza" / "sponza.obj"));
+
+	m_default_material.Ka = glm::vec3(1.f);
+	m_default_material.Kd = glm::vec3(1.f);
+	m_default_material.Ks = glm::vec3(1.f);
+	m_bboxMax = m_sceneObjects[0].objectData.bboxMax;
+	m_bboxMin = m_sceneObjects[0].objectData.bboxMin;
+
 	std::vector<glm::vec2> coveringTriangle = {
 		glm::vec2(-1, -1),
 		glm::vec2(3, -1),
 		glm::vec2(-1, 3)
 	};
-
-	m_sceneObject = createDemoSceneObject();
-	
-	m_default_material.Ka = glm::vec3(1.f);
-	m_default_material.Kd = glm::vec3(1.f);
-	m_default_material.Ks = glm::vec3(1.f);
-	m_bboxMax = m_sceneObject.objectData.bboxMax;
-	m_bboxMin = m_sceneObject.objectData.bboxMin;
 	
 	// --- VBO init ---
 
@@ -586,7 +596,7 @@ Application::~Application() {
     glDeleteTextures(1, &m_default_tex_object);
     glDeleteTextures(GBufferTextureCount, m_GBufferTextures);
     glDeleteSamplers(1, &m_samplerObject);
-    deleteDemoSceneObject(m_sceneObject);
+    std::for_each(m_sceneObjects.begin(), m_sceneObjects.end(), deleteDemoSceneObject);
     ImGui_ImplGlfwGL3_Shutdown();
     glfwTerminate();
 }
