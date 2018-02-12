@@ -15,7 +15,7 @@
 #include <algorithm> 
 
 
-Application::DemoSceneObject Application::createDemoSceneObject(const glmlv::fs::path & objPath) {
+Application::DemoSceneObject Application::createDemoSceneObject(const glmlv::fs::path & objPath, glm::vec3 scale, glm::vec3 translate, glm::vec3 rotate) {
 	Application::DemoSceneObject sceneObject;
 	glmlv::loadObj(objPath, sceneObject.objectData);
 	glGenBuffers(1, &sceneObject.VBO);
@@ -51,7 +51,14 @@ Application::DemoSceneObject Application::createDemoSceneObject(const glmlv::fs:
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image.width(), image.height(), GL_RGBA, GL_UNSIGNED_BYTE, image.data());
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
+	sceneObject.scale = scale;
+	sceneObject.translate = translate;
+	sceneObject.rotate = rotate;
 	return sceneObject;
+}
+
+Application::DemoSceneObject Application::createDemoSceneObject(const glmlv::fs::path & objPath) {
+	return createDemoSceneObject(objPath, glm::vec3(1.f), glm::vec3(0.f), glm::vec3(0.f));
 }
 
 void Application::deleteDemoSceneObject(Application::DemoSceneObject & sceneObject) {
@@ -61,7 +68,7 @@ void Application::deleteDemoSceneObject(Application::DemoSceneObject & sceneObje
  	glDeleteTextures(sceneObject.texObjects.size(), sceneObject.texObjects.data());
 }
 
-void Application::geometryPass(glm::mat4 ProjMatrix, glm::mat4 ViewMatrix, glm::mat4 MVMatrix, glm::mat4 NormalMatrix) {
+void Application::geometryPass(const glm::mat4 & ProjMatrix, const glm::mat4 & ViewMatrix) {
 
 	m_programGeometryPass.use();
 
@@ -87,6 +94,14 @@ void Application::geometryPass(glm::mat4 ProjMatrix, glm::mat4 ViewMatrix, glm::
 	for (const auto & sceneObject : m_sceneObjects) {
 	
 		glBindVertexArray(sceneObject.VAO);
+
+		glm::mat4 MVMatrix = ViewMatrix;
+		MVMatrix = glm::scale(MVMatrix, sceneObject.scale);
+		MVMatrix = glm::translate(MVMatrix, sceneObject.translate);
+		if (sceneObject.rotate != glm::vec3(0.f)) { // bug quand rotate vaut 0,0,0
+			MVMatrix = glm::rotate(MVMatrix, 1.f, sceneObject.rotate);
+		}
+		glm::mat4 NormalMatrix = glm::transpose(glm::inverse(MVMatrix));
 	        
 		glUniformMatrix4fv(uModelViewProjMatrix, 1, GL_FALSE, glm::value_ptr(ProjMatrix * MVMatrix));
 		glUniformMatrix4fv(uModelViewMatrix, 1, GL_FALSE, glm::value_ptr(MVMatrix));
@@ -156,11 +171,11 @@ void Application::geometryPass(glm::mat4 ProjMatrix, glm::mat4 ViewMatrix, glm::
 }
 
 void Application::shadingPass(
-	std::vector<glm::vec3> DirectionalLightDirs, std::vector<glm::vec3> DirectionalLightIntensities,
-	std::vector<glm::vec3> PointLightPositions, std::vector<glm::vec3> PointLightIntensities,
-	glm::vec3 DirLightDirection, glm::vec3 DirectionalLightIntensity,
-	glm::mat4 ViewMatrix, glm::mat4 rcpViewMatrix,
-	glm::mat4 dirLightProjMatrix, glm::mat4 dirLightViewMatrix,
+	const std::vector<glm::vec3> & DirectionalLightDirs, const std::vector<glm::vec3> & DirectionalLightIntensities,
+	const std::vector<glm::vec3> & PointLightPositions, const std::vector<glm::vec3> & PointLightIntensities,
+	const glm::vec3 & DirLightDirection, const glm::vec3 & DirectionalLightIntensity,
+	const glm::mat4 & ViewMatrix, const glm::mat4 & rcpViewMatrix,
+	const glm::mat4 & dirLightProjMatrix, const glm::mat4 & dirLightViewMatrix,
 	float shadowMapBias, int shadowMapSampleCount, float shadowMapSpread
 ) {
 
@@ -315,10 +330,8 @@ int Application::run()
 		}
 
 		glm::mat4 ViewMatrix = viewController.getViewMatrix();
-		glm::mat4 MVMatrix = glm::translate(ViewMatrix, glm::vec3(0.f, 0.f, -5.f));
-		glm::mat4 NormalMatrix = glm::transpose(glm::inverse(MVMatrix));
 
-		geometryPass(ProjMatrix, ViewMatrix, MVMatrix, NormalMatrix);
+		geometryPass(ProjMatrix, ViewMatrix);
 
 		shadingPass(
 			DirectionalLightDirs, DirectionalLightIntensities,

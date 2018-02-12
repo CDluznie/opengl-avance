@@ -25,6 +25,9 @@ public:
     	GLuint IBO;
     	GLuint VAO;
     	std::vector<GLuint> texObjects;
+    	glm::vec3 scale;
+    	glm::vec3 translate;
+    	glm::vec3 rotate;
 	};
 
     Application(int argc, char** argv);
@@ -113,17 +116,18 @@ private:
 
 
 	static DemoSceneObject createDemoSceneObject(const glmlv::fs::path & objPath);
+	static DemoSceneObject createDemoSceneObject(const glmlv::fs::path & objPath, glm::vec3 scale, glm::vec3 translate, glm::vec3 rotate);
 
 	static void deleteDemoSceneObject(DemoSceneObject & sceneObject);
 
-	void geometryPass(glm::mat4 ProjMatrix, glm::mat4 ViewMatrix, glm::mat4 MVMatrix, glm::mat4 NormalMatrix);
+	void geometryPass(const glm::mat4 & ProjMatrix, const glm::mat4 & ViewMatrix);
 
 	void shadingPass(
-		std::vector<glm::vec3> DirectionalLightDirs, std::vector<glm::vec3> DirectionalLightIntensities,
-		std::vector<glm::vec3> PointLightPositions, std::vector<glm::vec3> PointLightIntensities,
-		glm::vec3 DirLightDirection, glm::vec3 DirectionalLightIntensity,
-		glm::mat4 ViewMatrix, glm::mat4 rcpViewMatrix,
-		glm::mat4 dirLightProjMatrix, glm::mat4 dirLightViewMatrix,
+		const std::vector<glm::vec3> & DirectionalLightDirs, const std::vector<glm::vec3> & DirectionalLightIntensities,
+		const std::vector<glm::vec3> & PointLightPositions, const std::vector<glm::vec3> & PointLightIntensities,
+		const glm::vec3 & DirLightDirection, const glm::vec3 & DirectionalLightIntensity,
+		const glm::mat4 & ViewMatrix, const glm::mat4 & rcpViewMatrix,
+		const glm::mat4 & dirLightProjMatrix, const glm::mat4 & dirLightViewMatrix,
 		float shadowMapBias, int shadowMapSampleCount, float shadowMapSpread
 	);
 	
