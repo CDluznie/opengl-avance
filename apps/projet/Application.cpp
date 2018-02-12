@@ -96,7 +96,7 @@ void Application::geometryPass(const glm::mat4 & ProjMatrix, const glm::mat4 & V
 		glBindVertexArray(sceneObject.VAO);
 
 		glm::mat4 MVMatrix = ViewMatrix;
-		MVMatrix = glm::scale(MVMatrix, sceneObject.scale);
+		MVMatrix = glm::scale(MVMatrix, sceneObject.scale);//todo a l'init qu'une fois
 		MVMatrix = glm::translate(MVMatrix, sceneObject.translate);
 		if (sceneObject.rotate != glm::vec3(0.f)) { // bug quand rotate vaut 0,0,0
 			MVMatrix = glm::rotate(MVMatrix, 1.f, sceneObject.rotate);
@@ -461,6 +461,10 @@ Application::Application(int argc, char** argv):
 	glEnable(GL_DEPTH_TEST);
 
 	m_sceneObjects.push_back(createDemoSceneObject(m_AssetsRootPath / m_AppName / "models" / "sponza" / "sponza.obj"));
+	m_sceneObjects.push_back(createDemoSceneObject(
+		m_AssetsRootPath / m_AppName / "models" / "tie" / "imp_fly_tieinterceptor.obj",
+		glm::vec3(20.f),glm::vec3(12.f,5.f,0.f),glm::vec3(0.f,-90.f,0.f)
+	));
 
 	m_default_material.Ka = glm::vec3(1.f);
 	m_default_material.Kd = glm::vec3(1.f);
