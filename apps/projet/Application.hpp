@@ -21,6 +21,10 @@ public:
 
 	struct DemoSceneObject {
 		glmlv::ObjData objectData;
+		GLuint VBO;
+    	GLuint IBO;
+    	GLuint VAO;
+    	std::vector<GLuint> texObjects;
 	};
 
     Application(int argc, char** argv);
@@ -42,9 +46,6 @@ private:
     DemoSceneObject m_sceneObject;
 
 
-    GLuint m_VBO;
-    GLuint m_IBO;
-    GLuint m_VAO;
     GLuint m_GVBO;
     GLuint m_GVAO;
     
@@ -66,9 +67,8 @@ private:
 	glm::vec3 m_bboxMax;
     
     glmlv::ObjData::PhongMaterial m_default_material; // material without texture
-    std::vector<glmlv::ObjData::PhongMaterial> m_materials;
     GLuint m_default_tex_object;
-    std::vector<GLuint> m_texObjects;
+    
 	GLuint m_samplerObject;
 
 	GLuint m_directionalSMTexture;
@@ -112,6 +112,8 @@ private:
 
 
 	DemoSceneObject createDemoSceneObject();
+
+	void deleteDemoSceneObject(DemoSceneObject & sceneObject);
 
 	void geometryPass(glm::mat4 ProjMatrix, glm::mat4 ViewMatrix, glm::mat4 MVMatrix, glm::mat4 NormalMatrix);
 

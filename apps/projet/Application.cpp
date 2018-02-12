@@ -16,7 +16,47 @@
 Application::DemoSceneObject Application::createDemoSceneObject() {
 	Application::DemoSceneObject sceneObject;
 	glmlv::loadObj(m_AssetsRootPath / m_AppName / "models" / "sponza" / "sponza.obj", sceneObject.objectData);
+	glGenBuffers(1, &sceneObject.VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, sceneObject.VBO);
+    glBufferStorage(GL_ARRAY_BUFFER, sceneObject.objectData.vertexBuffer.size()*sizeof(glmlv::Vertex3f3f2f), sceneObject.objectData.vertexBuffer.data(), 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glGenBuffers(1, &sceneObject.IBO);
+    glBindBuffer(GL_ARRAY_BUFFER, sceneObject.IBO);
+    glBufferStorage(GL_ARRAY_BUFFER, sceneObject.objectData.indexBuffer.size()*sizeof(uint32_t), sceneObject.objectData.indexBuffer.data(), 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    const GLint positionAttrLocation = 0;
+    const GLint normalAttrLocation = 1;
+    const GLint texCoordsAttrLocation = 2;
+	glGenVertexArrays(1, &sceneObject.VAO);
+    glBindVertexArray(sceneObject.VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, sceneObject.VBO);
+    glEnableVertexAttribArray(positionAttrLocation);
+    glVertexAttribPointer(positionAttrLocation, 3, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*) offsetof(glmlv::Vertex3f3f2f, position));
+    glEnableVertexAttribArray(normalAttrLocation);
+    glVertexAttribPointer(normalAttrLocation, 3, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*) offsetof(glmlv::Vertex3f3f2f, normal));
+    glEnableVertexAttribArray(texCoordsAttrLocation);
+    glVertexAttribPointer(texCoordsAttrLocation, 2, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*) offsetof(glmlv::Vertex3f3f2f, texCoords));
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sceneObject.IBO);
+    glBindVertexArray(0);
+    sceneObject.texObjects.resize(sceneObject.objectData.textures.size());
+	glGenTextures(sceneObject.texObjects.size(), sceneObject.texObjects.data());
+	for (int i = 0; i < sceneObject.texObjects.size(); i++){
+		const auto texObject = sceneObject.texObjects[i];
+		const glmlv::Image2DRGBA & image = sceneObject.objectData.textures[i];
+		glBindTexture(GL_TEXTURE_2D, texObject);
+		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, image.width(), image.height());
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image.width(), image.height(), GL_RGBA, GL_UNSIGNED_BYTE, image.data());
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
 	return sceneObject;
+}
+
+void Application::deleteDemoSceneObject(Application::DemoSceneObject & sceneObject) {
+	glDeleteBuffers(1, &sceneObject.VBO);
+	glDeleteBuffers(1, &sceneObject.IBO);
+    glDeleteBuffers(1, &sceneObject.VAO);
+ 	glDeleteTextures(sceneObject.texObjects.size(), sceneObject.texObjects.data());
 }
 
 void Application::geometryPass(glm::mat4 ProjMatrix, glm::mat4 ViewMatrix, glm::mat4 MVMatrix, glm::mat4 NormalMatrix) {
@@ -42,7 +82,7 @@ void Application::geometryPass(glm::mat4 ProjMatrix, glm::mat4 ViewMatrix, glm::
 	glUniform1i(uKsSampler, 2);
 	glUniform1i(uShininessSampler, 3);
 		
-	glBindVertexArray(m_VAO);
+	glBindVertexArray(m_sceneObject.VAO);
         
 	glUniformMatrix4fv(uModelViewProjMatrix, 1, GL_FALSE, glm::value_ptr(ProjMatrix * MVMatrix));
 	glUniformMatrix4fv(uModelViewMatrix, 1, GL_FALSE, glm::value_ptr(MVMatrix));
@@ -55,14 +95,14 @@ void Application::geometryPass(glm::mat4 ProjMatrix, glm::mat4 ViewMatrix, glm::
 		if (indexMaterial == -1) { // Use a default mat
 			material = m_default_material;
 		} else {
-			material = m_materials[indexMaterial];
+			material = m_sceneObject.objectData.materials[indexMaterial];
 		}
 		// Ambiant light
 		GLuint KaTexture;
 		if (material.KaTextureId == -1) {
 			KaTexture = m_default_tex_object;
 		} else {
-			KaTexture = m_texObjects[material.KaTextureId];
+			KaTexture = m_sceneObject.texObjects[material.KaTextureId];
 		}
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, KaTexture);
@@ -72,7 +112,7 @@ void Application::geometryPass(glm::mat4 ProjMatrix, glm::mat4 ViewMatrix, glm::
 		if (material.KdTextureId == -1) {
 			KdTexture = m_default_tex_object;
 		} else {
-			KdTexture = m_texObjects[material.KdTextureId];
+			KdTexture = m_sceneObject.texObjects[material.KdTextureId];
 		}
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, KdTexture);
@@ -82,7 +122,7 @@ void Application::geometryPass(glm::mat4 ProjMatrix, glm::mat4 ViewMatrix, glm::
 		if (material.KsTextureId == -1) {
 			KsTexture = m_default_tex_object;
 		} else {
-			KsTexture = m_texObjects[material.KsTextureId];
+			KsTexture = m_sceneObject.texObjects[material.KsTextureId];
 		}
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, KsTexture);
@@ -92,7 +132,7 @@ void Application::geometryPass(glm::mat4 ProjMatrix, glm::mat4 ViewMatrix, glm::
 		if (material.shininessTextureId == -1) {
 			ShininessTexture = m_default_tex_object;
 		} else {
-			ShininessTexture = m_texObjects[material.shininessTextureId];
+			ShininessTexture = m_sceneObject.texObjects[material.shininessTextureId];
 		}
 		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_2D, ShininessTexture);
@@ -192,7 +232,7 @@ void Application::computeShadowMap(glm::mat4 dirLightProjMatrix, glm::mat4 dirLi
 
 	glUniformMatrix4fv(uDirLightViewProjMatrix, 1, GL_FALSE, glm::value_ptr(dirLightProjMatrix * dirLightViewMatrix));
 	
-	glBindVertexArray(m_VAO);
+	glBindVertexArray(m_sceneObject.VAO);
 
 	// We draw each shape by specifying how much indices it carries, and with an offset in the global index buffer
 	auto indexOffset = 0;
@@ -405,7 +445,6 @@ Application::Application(int argc, char** argv):
 
 	m_sceneObject = createDemoSceneObject();
 	
-	m_materials = m_sceneObject.objectData.materials;
 	m_default_material.Ka = glm::vec3(1.f);
 	m_default_material.Kd = glm::vec3(1.f);
 	m_default_material.Ks = glm::vec3(1.f);
@@ -414,43 +453,18 @@ Application::Application(int argc, char** argv):
 	
 	// --- VBO init ---
 
-	glGenBuffers(1, &m_VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-    glBufferStorage(GL_ARRAY_BUFFER, m_sceneObject.objectData.vertexBuffer.size()*sizeof(glmlv::Vertex3f3f2f), m_sceneObject.objectData.vertexBuffer.data(), 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     glGenBuffers(1, &m_GVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, m_GVBO);
     glBufferStorage(GL_ARRAY_BUFFER, coveringTriangle.size()*sizeof(glm::vec2), coveringTriangle.data(), 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0); 
 
-
-    // --- IBO init ---
-    
-    glGenBuffers(1, &m_IBO);
-    glBindBuffer(GL_ARRAY_BUFFER, m_IBO);
-    glBufferStorage(GL_ARRAY_BUFFER, m_sceneObject.objectData.indexBuffer.size()*sizeof(uint32_t), m_sceneObject.objectData.indexBuffer.data(), 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    
     
     // --- VAO init ----
     
 	const GLint positionAttrLocation = 0;
     const GLint normalAttrLocation = 1;
     const GLint texCoordsAttrLocation = 2;
-    
-	glGenVertexArrays(1, &m_VAO);
-    glBindVertexArray(m_VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-    glEnableVertexAttribArray(positionAttrLocation);
-    glVertexAttribPointer(positionAttrLocation, 3, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*) offsetof(glmlv::Vertex3f3f2f, position));
-    glEnableVertexAttribArray(normalAttrLocation);
-    glVertexAttribPointer(normalAttrLocation, 3, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*) offsetof(glmlv::Vertex3f3f2f, normal));
-    glEnableVertexAttribArray(texCoordsAttrLocation);
-    glVertexAttribPointer(texCoordsAttrLocation, 2, GL_FLOAT, GL_FALSE, sizeof(glmlv::Vertex3f3f2f), (const GLvoid*) offsetof(glmlv::Vertex3f3f2f, texCoords));
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IBO);
-    glBindVertexArray(0);
 
     glGenVertexArrays(1, &m_GVAO);
     glBindVertexArray(m_GVAO);
@@ -495,20 +509,6 @@ Application::Application(int argc, char** argv):
 	uDirLightShadowMapSpread = glGetUniformLocation(m_programShadingPass.glId(), "uDirLightShadowMapSpread");
 
 	// --- Texture init ---
-
-	m_texObjects.resize(m_sceneObject.objectData.textures.size());
-
-	glActiveTexture(GL_TEXTURE0);
-
-	glGenTextures(m_texObjects.size(), m_texObjects.data());
-	for (int i = 0; i < m_texObjects.size(); i++){
-		const auto texObject = m_texObjects[i];
-		const glmlv::Image2DRGBA & image = m_sceneObject.objectData.textures[i];
-		glBindTexture(GL_TEXTURE_2D, texObject);
-		glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB32F, image.width(), image.height());
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image.width(), image.height(), GL_RGBA, GL_UNSIGNED_BYTE, image.data());
-		glBindTexture(GL_TEXTURE_2D, 0);
-	}
 	
 	glGenTextures(1, &m_default_tex_object);
 	const glmlv::Image2DRGBA image {1, 1, 255, 255, 255, 255};
@@ -580,16 +580,13 @@ Application::Application(int argc, char** argv):
 }
 
 Application::~Application() {
-	glDeleteBuffers(1, &m_VBO);
-	glDeleteBuffers(1, &m_IBO);
-    glDeleteBuffers(1, &m_VAO);
     glDeleteBuffers(1, &m_GVBO);
     glDeleteBuffers(1, &m_GVAO);
     glDeleteBuffers(1, &ssboLightInfos);
-    glDeleteTextures(m_texObjects.size(), m_texObjects.data());
     glDeleteTextures(1, &m_default_tex_object);
     glDeleteTextures(GBufferTextureCount, m_GBufferTextures);
     glDeleteSamplers(1, &m_samplerObject);
+    deleteDemoSceneObject(m_sceneObject);
     ImGui_ImplGlfwGL3_Shutdown();
     glfwTerminate();
 }
