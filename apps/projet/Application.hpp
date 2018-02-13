@@ -29,6 +29,13 @@ public:
     	glm::vec3 translate;
     	glm::vec3 rotate;
 	};
+	
+	enum DemoSceneObjectId {
+		SceneObjectSponza = 0,
+		SceneObjectTieInterceptor1,
+		
+		SceneObjectCount
+	};
 
     Application(int argc, char** argv);
     
@@ -118,6 +125,9 @@ private:
 	static DemoSceneObject createDemoSceneObject(const glmlv::fs::path & objPath);
 	static DemoSceneObject createDemoSceneObject(const glmlv::fs::path & objPath, glm::vec3 scale, glm::vec3 translate, glm::vec3 rotate);
 
+	static void translateDemoSceneObject(DemoSceneObject & sceneObject, glm::vec3 translate);
+	static void rotateDemoSceneObject(DemoSceneObject & sceneObject, glm::vec3 rotate);
+	
 	static void deleteDemoSceneObject(DemoSceneObject & sceneObject);
 
 	void geometryPass(const glm::mat4 & ProjMatrix, const glm::mat4 & ViewMatrix);
@@ -132,5 +142,8 @@ private:
 	);
 	
 	void computeShadowMap(glm::mat4 dirLightProjMatrix, glm::mat4 dirLightViewMatrix);
+	
+	void loadSceneObjects();
+	void animationSceneObjects(double time);
 
 };

@@ -61,6 +61,14 @@ Application::DemoSceneObject Application::createDemoSceneObject(const glmlv::fs:
 	return createDemoSceneObject(objPath, glm::vec3(1.f), glm::vec3(0.f), glm::vec3(0.f));
 }
 
+void Application::translateDemoSceneObject(DemoSceneObject & sceneObject, glm::vec3 translate) {
+	sceneObject.translate += translate;
+}
+
+void Application::rotateDemoSceneObject(DemoSceneObject & sceneObject, glm::vec3 rotate) {
+	sceneObject.rotate += rotate;
+}
+
 void Application::deleteDemoSceneObject(Application::DemoSceneObject & sceneObject) {
 	glDeleteBuffers(1, &sceneObject.VBO);
 	glDeleteBuffers(1, &sceneObject.IBO);
@@ -273,6 +281,30 @@ void Application::computeShadowMap(glm::mat4 dirLightProjMatrix, glm::mat4 dirLi
 
 }
 
+void Application::loadSceneObjects() {
+	m_sceneObjects.resize(SceneObjectCount);
+	m_sceneObjects[SceneObjectSponza] = createDemoSceneObject(
+		m_AssetsRootPath / m_AppName / "models" / "sponza" / "sponza.obj"
+	);
+	m_sceneObjects[SceneObjectTieInterceptor1] = createDemoSceneObject(
+		m_AssetsRootPath / m_AppName / "models" / "tie" / "imp_fly_tieinterceptor.obj",
+		glm::vec3(20.f),glm::vec3(12.f,5.f,0.f),glm::vec3(0.f,-1.4,0.f)
+	);
+
+}
+
+void Application::animationSceneObjects(double time) {
+	if (time <= 12) {
+		translateDemoSceneObject(m_sceneObjects[SceneObjectTieInterceptor1], glm::vec3(0.01f,0.f,0.f));
+		//rotateDemoSceneObject(m_sceneObjects[SceneObjectTieInterceptor1], glm::vec3(0.02f,0.f,0.f));
+	} else if (time <= 14) {
+		translateDemoSceneObject(m_sceneObjects[SceneObjectTieInterceptor1], glm::vec3(0.f,0.01f,0.f));
+	} else if (time <= 16.15) {
+		//translateDemoSceneObject(m_sceneObjects[SceneObjectTieInterceptor1], glm::vec3(0.f,0.01f,0.f));
+		rotateDemoSceneObject(m_sceneObjects[SceneObjectTieInterceptor1], glm::vec3(0.f,0.008f,0.f));
+	}
+}
+
 int Application::run()
 {
     float clearColor[3] = { 0, 0, 0 };
@@ -302,6 +334,8 @@ int Application::run()
 	float shadowMapSpreadInit = 0.00001*0.3;
 	float shadowMapSpread = shadowMapSpread*shadowMapSpreadCoeff;
 
+	const auto begin_seconds = glfwGetTime();
+
     // Loop until the user closes the window
     for (auto iterationCount = 0u; !m_GLFWHandle.shouldClose(); ++iterationCount)
     {
@@ -329,6 +363,9 @@ int Application::run()
 			directionalSMDirty = false; // Pas de calcul au prochain tour
 		}
 
+		const auto time = seconds - begin_seconds;
+		animationSceneObjects(time);
+
 		glm::mat4 ViewMatrix = viewController.getViewMatrix();
 
 		geometryPass(ProjMatrix, ViewMatrix);
@@ -348,6 +385,8 @@ int Application::run()
         {
             ImGui::Begin("GUI");
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            ImGui::Separator();
+            ImGui::Text("Time : %f", time);
             ImGui::Separator();
             ImGui::ColorEditMode(ImGuiColorEditMode_RGB);
             if (ImGui::ColorEdit3("clearColor", clearColor)) {
@@ -460,12 +499,8 @@ Application::Application(int argc, char** argv):
 
 	glEnable(GL_DEPTH_TEST);
 
-	m_sceneObjects.push_back(createDemoSceneObject(m_AssetsRootPath / m_AppName / "models" / "sponza" / "sponza.obj"));
-	m_sceneObjects.push_back(createDemoSceneObject(
-		m_AssetsRootPath / m_AppName / "models" / "tie" / "imp_fly_tieinterceptor.obj",
-		glm::vec3(20.f),glm::vec3(12.f,5.f,0.f),glm::vec3(0.f,-1.4,0.f)
-	));
-
+	loadSceneObjects();
+	
 	m_default_material.Ka = glm::vec3(1.f);
 	m_default_material.Kd = glm::vec3(1.f);
 	m_default_material.Ks = glm::vec3(1.f);
