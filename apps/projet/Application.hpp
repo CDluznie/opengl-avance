@@ -32,7 +32,8 @@ public:
 	
 	enum DemoSceneObjectId {
 		SceneObjectSponza = 0,
-		SceneObjectTieInterceptor1,
+		SceneObjectTieInterceptor_1,
+		SceneObjectArc170,
 		
 		SceneObjectCount
 	};

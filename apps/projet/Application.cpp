@@ -286,23 +286,30 @@ void Application::loadSceneObjects() {
 	m_sceneObjects[SceneObjectSponza] = createDemoSceneObject(
 		m_AssetsRootPath / m_AppName / "models" / "sponza" / "sponza.obj"
 	);
-	m_sceneObjects[SceneObjectTieInterceptor1] = createDemoSceneObject(
+	m_sceneObjects[SceneObjectTieInterceptor_1] = createDemoSceneObject(
 		m_AssetsRootPath / m_AppName / "models" / "tie" / "imp_fly_tieinterceptor.obj",
 		glm::vec3(20.f),glm::vec3(12.f,5.f,0.f),glm::vec3(0.f,-1.4,0.f)
 	);
-
+	m_sceneObjects[SceneObjectArc170] = createDemoSceneObject(
+		m_AssetsRootPath / m_AppName / "models" / "arc" / "Arc170.obj",
+		glm::vec3(0.2f),glm::vec3(-4500.f,0.f,0.f),glm::vec3(0.f)
+	);
 }
 
 void Application::animationSceneObjects(double time) {
+	
+	
 	if (time <= 12) {
-		translateDemoSceneObject(m_sceneObjects[SceneObjectTieInterceptor1], glm::vec3(0.01f,0.f,0.f));
-		//rotateDemoSceneObject(m_sceneObjects[SceneObjectTieInterceptor1], glm::vec3(0.02f,0.f,0.f));
+		translateDemoSceneObject(m_sceneObjects[SceneObjectTieInterceptor_1], glm::vec3(0.01f,0.f,0.f));
+		//rotateDemoSceneObject(m_sceneObjects[SceneObjectTieInterceptor_1], glm::vec3(0.02f,0.f,0.f));
 	} else if (time <= 14) {
-		translateDemoSceneObject(m_sceneObjects[SceneObjectTieInterceptor1], glm::vec3(0.f,0.01f,0.f));
+		translateDemoSceneObject(m_sceneObjects[SceneObjectTieInterceptor_1], glm::vec3(0.f,0.01f,0.f));
 	} else if (time <= 16.15) {
-		//translateDemoSceneObject(m_sceneObjects[SceneObjectTieInterceptor1], glm::vec3(0.f,0.01f,0.f));
-		rotateDemoSceneObject(m_sceneObjects[SceneObjectTieInterceptor1], glm::vec3(0.f,0.008f,0.f));
+		//translateDemoSceneObject(m_sceneObjects[SceneObjectTieInterceptor_1], glm::vec3(0.f,0.01f,0.f));
+		rotateDemoSceneObject(m_sceneObjects[SceneObjectTieInterceptor_1], glm::vec3(0.f,0.008f,0.f));
 	}
+
+
 }
 
 int Application::run()
