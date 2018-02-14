@@ -25,9 +25,14 @@ public:
     	GLuint IBO;
     	GLuint VAO;
     	std::vector<GLuint> texObjects;
-    	glm::vec3 scale;
-    	glm::vec3 translate;
-    	glm::vec3 rotate;
+    	float scale;
+    	glm::vec3 Position;
+		float fPhi;
+		float fTheta;
+		float fPsi;
+		glm::vec3 FrontVector;
+		glm::vec3 LeftVector;
+		glm::vec3 UpVector;
 	};
 	
 	enum DemoSceneObjectId {
@@ -124,10 +129,16 @@ private:
 
 
 	static DemoSceneObject createDemoSceneObject(const glmlv::fs::path & objPath);
-	static DemoSceneObject createDemoSceneObject(const glmlv::fs::path & objPath, glm::vec3 scale, glm::vec3 translate, glm::vec3 rotate);
+	static DemoSceneObject createDemoSceneObject(const glmlv::fs::path & objPath, float scale, glm::vec3 translate, glm::vec3 rotate);
 
-	static void translateDemoSceneObject(DemoSceneObject & sceneObject, glm::vec3 translate);
-	static void rotateDemoSceneObject(DemoSceneObject & sceneObject, glm::vec3 rotate);
+	static void moveLeftDemoSceneObject(DemoSceneObject & sceneObject, float t);
+	static void moveFrontDemoSceneObject(DemoSceneObject & sceneObject, float t);
+	static void moveUpDemoSceneObject(DemoSceneObject & sceneObject, float t);
+	static void rotateLeftDemoSceneObject(DemoSceneObject & sceneObject, float degrees);
+	static void rotateUpDemoSceneObject(DemoSceneObject & sceneObject, float degrees);
+	static void rotateFrontDemoSceneObject(DemoSceneObject & sceneObject, float degrees);
+	static void computeDirectionVectorsDemoSceneObject(DemoSceneObject & sceneObject);
+	glm::mat4 getTransformationMatrixDemoSceneObject(const DemoSceneObject & sceneObject);
 	
 	static void deleteDemoSceneObject(DemoSceneObject & sceneObject);
 

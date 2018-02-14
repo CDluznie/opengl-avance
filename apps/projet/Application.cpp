@@ -15,7 +15,7 @@
 #include <algorithm> 
 
 
-Application::DemoSceneObject Application::createDemoSceneObject(const glmlv::fs::path & objPath, glm::vec3 scale, glm::vec3 translate, glm::vec3 rotate) {
+Application::DemoSceneObject Application::createDemoSceneObject(const glmlv::fs::path & objPath, float scale, glm::vec3 translate, glm::vec3 rotate) {
 	Application::DemoSceneObject sceneObject;
 	glmlv::loadObj(objPath, sceneObject.objectData);
 	glGenBuffers(1, &sceneObject.VBO);
@@ -52,21 +52,62 @@ Application::DemoSceneObject Application::createDemoSceneObject(const glmlv::fs:
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 	sceneObject.scale = scale;
-	sceneObject.translate = translate;
-	sceneObject.rotate = rotate;
+	sceneObject.Position = translate;
+	sceneObject.fPhi = glm::pi<float>();
+	sceneObject.fTheta = 0;
+	sceneObject.fPsi = 0;
+	computeDirectionVectorsDemoSceneObject(sceneObject);
 	return sceneObject;
 }
 
 Application::DemoSceneObject Application::createDemoSceneObject(const glmlv::fs::path & objPath) {
-	return createDemoSceneObject(objPath, glm::vec3(1.f), glm::vec3(0.f), glm::vec3(0.f));
+	return createDemoSceneObject(objPath, 1.f, glm::vec3(0.f), glm::vec3(0.f));
 }
 
-void Application::translateDemoSceneObject(DemoSceneObject & sceneObject, glm::vec3 translate) {
-	sceneObject.translate += translate;
+void Application::moveLeftDemoSceneObject(DemoSceneObject & sceneObject, float t) {
+	sceneObject.Position += (t/sceneObject.scale)*sceneObject.LeftVector;
 }
 
-void Application::rotateDemoSceneObject(DemoSceneObject & sceneObject, glm::vec3 rotate) {
-	sceneObject.rotate += rotate;
+void Application::moveFrontDemoSceneObject(DemoSceneObject & sceneObject, float t) {
+	sceneObject.Position += (t/sceneObject.scale)*sceneObject.FrontVector;
+}
+
+void Application::moveUpDemoSceneObject(DemoSceneObject & sceneObject, float t) {
+	sceneObject.Position += (t/sceneObject.scale)*sceneObject.UpVector;
+}
+
+void Application::rotateLeftDemoSceneObject(DemoSceneObject & sceneObject, float degrees) {
+	sceneObject.fPhi += glm::radians(degrees);
+	computeDirectionVectorsDemoSceneObject(sceneObject);
+}
+
+void Application::rotateUpDemoSceneObject(DemoSceneObject & sceneObject, float degrees) {
+	sceneObject.fTheta += glm::radians(degrees);
+	computeDirectionVectorsDemoSceneObject(sceneObject);
+}
+
+void Application::rotateFrontDemoSceneObject(DemoSceneObject & sceneObject, float degrees) {
+	sceneObject.fPsi += glm::radians(degrees);
+	computeDirectionVectorsDemoSceneObject(sceneObject);
+}
+
+void Application::computeDirectionVectorsDemoSceneObject(DemoSceneObject & sceneObject) {
+	double cosTheta = glm::cos(sceneObject.fTheta), sinTheta = glm::sin(sceneObject.fTheta);
+	double cosPhi = glm::cos(sceneObject.fPhi), sinPhi = glm::sin(sceneObject.fPhi);
+	sceneObject.FrontVector = glm::vec3(cosTheta*sinPhi, sinTheta, cosTheta*cosPhi);
+	sceneObject.LeftVector = glm::vec3(cosPhi, 0, -sinPhi);
+	sceneObject.LeftVector = glm::vec3(glm::sin(sceneObject.fPhi + glm::half_pi<float>()), 0, glm::cos(sceneObject.fPhi + glm::half_pi<float>()));
+	sceneObject.UpVector = glm::cross(sceneObject.FrontVector, sceneObject.LeftVector);
+}
+
+glm::mat4 Application::getTransformationMatrixDemoSceneObject(const DemoSceneObject & sceneObject) {
+	glm::mat4 transformations(1.f);
+	transformations = glm::scale(transformations, glm::vec3(sceneObject.scale));
+	transformations = glm::translate(transformations, sceneObject.Position);
+	transformations = glm::rotate(transformations, sceneObject.fPhi, sceneObject.UpVector);
+	transformations = glm::rotate(transformations, sceneObject.fTheta, sceneObject.LeftVector);
+	transformations = glm::rotate(transformations, sceneObject.fPsi, sceneObject.FrontVector);
+	return transformations;
 }
 
 void Application::deleteDemoSceneObject(Application::DemoSceneObject & sceneObject) {
@@ -103,12 +144,7 @@ void Application::geometryPass(const glm::mat4 & ProjMatrix, const glm::mat4 & V
 	
 		glBindVertexArray(sceneObject.VAO);
 
-		glm::mat4 MVMatrix = ViewMatrix;
-		MVMatrix = glm::scale(MVMatrix, sceneObject.scale);//todo a l'init qu'une fois
-		MVMatrix = glm::translate(MVMatrix, sceneObject.translate);
-		MVMatrix = glm::rotate(MVMatrix, sceneObject.rotate.x, glm::vec3(1.f,0.f,0.f));
-		MVMatrix = glm::rotate(MVMatrix, sceneObject.rotate.y, glm::vec3(0.f,1.f,0.f));
-		MVMatrix = glm::rotate(MVMatrix, sceneObject.rotate.z, glm::vec3(0.f,0.f,1.f));
+		glm::mat4 MVMatrix = ViewMatrix* getTransformationMatrixDemoSceneObject(sceneObject);
 		glm::mat4 NormalMatrix = glm::transpose(glm::inverse(MVMatrix));
 	        
 		glUniformMatrix4fv(uModelViewProjMatrix, 1, GL_FALSE, glm::value_ptr(ProjMatrix * MVMatrix));
@@ -288,25 +324,41 @@ void Application::loadSceneObjects() {
 	);
 	m_sceneObjects[SceneObjectTieInterceptor_1] = createDemoSceneObject(
 		m_AssetsRootPath / m_AppName / "models" / "tie" / "imp_fly_tieinterceptor.obj",
-		glm::vec3(20.f),glm::vec3(12.f,5.f,0.f),glm::vec3(0.f,-1.4,0.f)
+		20.f,glm::vec3(0.f),glm::vec3(0.f,-1.4,0.f)
 	);
 	m_sceneObjects[SceneObjectArc170] = createDemoSceneObject(
 		m_AssetsRootPath / m_AppName / "models" / "arc" / "Arc170.obj",
-		glm::vec3(0.2f),glm::vec3(-4500.f,0.f,0.f),glm::vec3(0.f)
+		0.2f,glm::vec3(-0.f,0.f,0.f),glm::vec3(0.f)
 	);
 }
 
 void Application::animationSceneObjects(double time) {
 	
 	
+	/*if (time <= 12) {
+		moveFrontDemoSceneObject(m_sceneObjects[SceneObjectTieInterceptor_1], -0.1);
+		//rotateFrontDemoSceneObject(m_sceneObjects[SceneObjectTieInterceptor_1], 2);
+		//rotateLeftDemoSceneObject(m_sceneObjects[SceneObjectTieInterceptor_1], 0.01);
+		rotateUpDemoSceneObject(m_sceneObjects[SceneObjectTieInterceptor_1], -0.005);
+		moveFrontDemoSceneObject(m_sceneObjects[SceneObjectArc170], 0.1);
+	} else if (time <= 16) {
+		moveUpDemoSceneObject(m_sceneObjects[SceneObjectTieInterceptor_1], 0.1);
+	} else if (time <= 25.5) {
+		rotateLeftDemoSceneObject(m_sceneObjects[SceneObjectTieInterceptor_1], 0.5);
+	} else if (time <= 30) {
+		moveFrontDemoSceneObject(m_sceneObjects[SceneObjectTieInterceptor_1], -0.1);
+	}*/
+	
 	if (time <= 12) {
-		translateDemoSceneObject(m_sceneObjects[SceneObjectTieInterceptor_1], glm::vec3(0.01f,0.f,0.f));
-		//rotateDemoSceneObject(m_sceneObjects[SceneObjectTieInterceptor_1], glm::vec3(0.02f,0.f,0.f));
-	} else if (time <= 14) {
-		translateDemoSceneObject(m_sceneObjects[SceneObjectTieInterceptor_1], glm::vec3(0.f,0.01f,0.f));
-	} else if (time <= 16.15) {
-		//translateDemoSceneObject(m_sceneObjects[SceneObjectTieInterceptor_1], glm::vec3(0.f,0.01f,0.f));
-		rotateDemoSceneObject(m_sceneObjects[SceneObjectTieInterceptor_1], glm::vec3(0.f,0.008f,0.f));
+		moveFrontDemoSceneObject(m_sceneObjects[SceneObjectArc170], 0.1);
+		rotateUpDemoSceneObject(m_sceneObjects[SceneObjectArc170], 0.005);
+		rotateLeftDemoSceneObject(m_sceneObjects[SceneObjectArc170], 0.01);
+	} else if (time <= 16) {
+		moveUpDemoSceneObject(m_sceneObjects[SceneObjectArc170], 0.1);
+	} else if (time <= 25.5) {
+		rotateLeftDemoSceneObject(m_sceneObjects[SceneObjectArc170], 0.5);
+	} else if (time <= 60) {
+		moveFrontDemoSceneObject(m_sceneObjects[SceneObjectArc170], 0.1);
 	}
 
 
@@ -316,8 +368,12 @@ int Application::run()
 {
     float clearColor[3] = { 0, 0, 0 };
 	
-    std::vector<glm::vec3> DirectionalLightDirs = {};
-    std::vector<glm::vec3> DirectionalLightIntensities = {};
+    std::vector<glm::vec3> DirectionalLightDirs = {
+		glm::vec3(0,1,0)
+	};
+    std::vector<glm::vec3> DirectionalLightIntensities = {
+		glm::vec3(0.6)
+	};
     std::vector<glm::vec3> PointLightPositions = {};
     std::vector<glm::vec3> PointLightIntensities = {};
 
