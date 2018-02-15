@@ -129,7 +129,7 @@ private:
 
 
 	static DemoSceneObject createDemoSceneObject(const glmlv::fs::path & objPath);
-	static DemoSceneObject createDemoSceneObject(const glmlv::fs::path & objPath, float scale, glm::vec3 translate, glm::vec3 rotate);
+	static DemoSceneObject createDemoSceneObject(const glmlv::fs::path & objPath, float scale, glm::vec3 translate, float phi, float theta);
 
 	static void moveLeftDemoSceneObject(DemoSceneObject & sceneObject, float t);
 	static void moveFrontDemoSceneObject(DemoSceneObject & sceneObject, float t);
@@ -139,6 +139,8 @@ private:
 	static void rotateFrontDemoSceneObject(DemoSceneObject & sceneObject, float degrees);
 	static void computeDirectionVectorsDemoSceneObject(DemoSceneObject & sceneObject);
 	glm::mat4 getTransformationMatrixDemoSceneObject(const DemoSceneObject & sceneObject);
+	
+	static void moveDemoSceneObject(DemoSceneObject & sceneObject, float speed, float left, float up);
 	
 	static void deleteDemoSceneObject(DemoSceneObject & sceneObject);
 
@@ -155,7 +157,9 @@ private:
 	
 	void computeShadowMap(glm::mat4 dirLightProjMatrix, glm::mat4 dirLightViewMatrix);
 	
+	unsigned long iterationSum(std::vector<unsigned long> current_iterations);
+	
 	void loadSceneObjects();
-	void animationSceneObjects(double time);
+	void animationSceneObjects(double time, unsigned long iteration);
 
 };

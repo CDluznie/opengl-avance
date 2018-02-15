@@ -15,7 +15,7 @@
 #include <algorithm> 
 
 
-Application::DemoSceneObject Application::createDemoSceneObject(const glmlv::fs::path & objPath, float scale, glm::vec3 translate, glm::vec3 rotate) {
+Application::DemoSceneObject Application::createDemoSceneObject(const glmlv::fs::path & objPath, float scale, glm::vec3 translate, float phi, float theta) {
 	Application::DemoSceneObject sceneObject;
 	glmlv::loadObj(objPath, sceneObject.objectData);
 	glGenBuffers(1, &sceneObject.VBO);
@@ -52,16 +52,16 @@ Application::DemoSceneObject Application::createDemoSceneObject(const glmlv::fs:
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 	sceneObject.scale = scale;
-	sceneObject.Position = translate;
-	sceneObject.fPhi = glm::pi<float>();
-	sceneObject.fTheta = 0;
+	sceneObject.Position = translate/scale;
+	sceneObject.fPhi = glm::radians(phi);
+	sceneObject.fTheta = glm::radians(theta);
 	sceneObject.fPsi = 0;
 	computeDirectionVectorsDemoSceneObject(sceneObject);
 	return sceneObject;
 }
 
 Application::DemoSceneObject Application::createDemoSceneObject(const glmlv::fs::path & objPath) {
-	return createDemoSceneObject(objPath, 1.f, glm::vec3(0.f), glm::vec3(0.f));
+	return createDemoSceneObject(objPath, 1.f, glm::vec3(0.f), 180, 0);
 }
 
 void Application::moveLeftDemoSceneObject(DemoSceneObject & sceneObject, float t) {
@@ -96,17 +96,30 @@ void Application::computeDirectionVectorsDemoSceneObject(DemoSceneObject & scene
 	double cosPhi = glm::cos(sceneObject.fPhi), sinPhi = glm::sin(sceneObject.fPhi);
 	sceneObject.FrontVector = glm::vec3(cosTheta*sinPhi, sinTheta, cosTheta*cosPhi);
 	sceneObject.LeftVector = glm::vec3(cosPhi, 0, -sinPhi);
-	sceneObject.LeftVector = glm::vec3(glm::sin(sceneObject.fPhi + glm::half_pi<float>()), 0, glm::cos(sceneObject.fPhi + glm::half_pi<float>()));
+	//sceneObject.LeftVector = glm::vec3(glm::sin(sceneObject.fPhi + glm::half_pi<float>()), 0, glm::cos(sceneObject.fPhi + glm::half_pi<float>()));
 	sceneObject.UpVector = glm::cross(sceneObject.FrontVector, sceneObject.LeftVector);
+	
+}
+
+void Application::moveDemoSceneObject(DemoSceneObject & sceneObject, float speed, float left, float up) {
+	moveFrontDemoSceneObject(sceneObject, speed);
+	rotateUpDemoSceneObject(sceneObject, up);
+	rotateLeftDemoSceneObject(sceneObject, left);
 }
 
 glm::mat4 Application::getTransformationMatrixDemoSceneObject(const DemoSceneObject & sceneObject) {
-	glm::mat4 transformations(1.f);
+	/*glm::mat4 transformations(1.f);
 	transformations = glm::scale(transformations, glm::vec3(sceneObject.scale));
 	transformations = glm::translate(transformations, sceneObject.Position);
 	transformations = glm::rotate(transformations, sceneObject.fPhi, sceneObject.UpVector);
 	transformations = glm::rotate(transformations, sceneObject.fTheta, sceneObject.LeftVector);
 	transformations = glm::rotate(transformations, sceneObject.fPsi, sceneObject.FrontVector);
+	*/glm::mat4 transformations(1.f);
+	transformations = glm::scale(transformations, glm::vec3(sceneObject.scale));
+	transformations = glm::translate(transformations, sceneObject.Position);
+	transformations = glm::rotate(transformations, sceneObject.fPhi, glm::vec3(0,1,0));
+	transformations = glm::rotate(transformations, sceneObject.fTheta, glm::vec3(-1,0,0));
+	transformations = glm::rotate(transformations, sceneObject.fPsi, glm::vec3(0,0,-1));
 	return transformations;
 }
 
@@ -317,6 +330,13 @@ void Application::computeShadowMap(glm::mat4 dirLightProjMatrix, glm::mat4 dirLi
 
 }
 
+unsigned long Application::iterationSum(std::vector<unsigned long> current_iterations) {
+	unsigned long sum = 0;
+	for (auto& n : current_iterations)
+		sum += n;
+	return sum;
+}
+
 void Application::loadSceneObjects() {
 	m_sceneObjects.resize(SceneObjectCount);
 	m_sceneObjects[SceneObjectSponza] = createDemoSceneObject(
@@ -324,16 +344,15 @@ void Application::loadSceneObjects() {
 	);
 	m_sceneObjects[SceneObjectTieInterceptor_1] = createDemoSceneObject(
 		m_AssetsRootPath / m_AppName / "models" / "tie" / "imp_fly_tieinterceptor.obj",
-		20.f,glm::vec3(0.f),glm::vec3(0.f,-1.4,0.f)
+		20.f,glm::vec3(0.f, 0.f,0.f),0,0
 	);
 	m_sceneObjects[SceneObjectArc170] = createDemoSceneObject(
 		m_AssetsRootPath / m_AppName / "models" / "arc" / "Arc170.obj",
-		0.2f,glm::vec3(-0.f,0.f,0.f),glm::vec3(0.f)
+		0.05f, glm::vec3(1000.f,500.f,0.f),-90,0
 	);
 }
 
-void Application::animationSceneObjects(double time) {
-	
+void Application::animationSceneObjects(double time, unsigned long iteration) {
 	
 	/*if (time <= 12) {
 		moveFrontDemoSceneObject(m_sceneObjects[SceneObjectTieInterceptor_1], -0.1);
@@ -349,17 +368,132 @@ void Application::animationSceneObjects(double time) {
 		moveFrontDemoSceneObject(m_sceneObjects[SceneObjectTieInterceptor_1], -0.1);
 	}*/
 	
-	if (time <= 12) {
-		moveFrontDemoSceneObject(m_sceneObjects[SceneObjectArc170], 0.1);
-		rotateUpDemoSceneObject(m_sceneObjects[SceneObjectArc170], 0.005);
-		rotateLeftDemoSceneObject(m_sceneObjects[SceneObjectArc170], 0.01);
-	} else if (time <= 16) {
-		moveUpDemoSceneObject(m_sceneObjects[SceneObjectArc170], 0.1);
-	} else if (time <= 25.5) {
-		rotateLeftDemoSceneObject(m_sceneObjects[SceneObjectArc170], 0.5);
-	} else if (time <= 60) {
-		moveFrontDemoSceneObject(m_sceneObjects[SceneObjectArc170], 0.1);
+	
+	float speed;
+	std::vector<unsigned long> times;
+	
+	// ARC 170
+	speed = 0.2;
+	times.push_back(2300);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0, 0);
+		return;
 	}
+	times.push_back(300);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, -0.08, 0.02);
+		return;
+	}
+	times.push_back(300);
+	if (iteration <= iterationSum(times)){;
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0.08, -0.015);
+		return;
+	}
+	times.push_back(100);
+	if (iteration <= iterationSum(times)) {
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0, -0.005);
+		return;
+	}
+	times.push_back(200);
+	if (iteration <= iterationSum(times)) {
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, -0.06, -0.01);
+		return;
+	}
+	times.push_back(200);
+	if (iteration <= iterationSum(times)) {
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0.06, 0.01);
+		return;
+	}
+	times.push_back(600);
+	if (iteration <= iterationSum(times)) {
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0, 0);
+		return;
+	}
+	times.push_back(600);
+	if (iteration <= iterationSum(times)) {
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0.01, -0.1);
+		return;
+	}
+	times.push_back(500);
+	if (iteration <= iterationSum(times)) {
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0.01, -0.05);
+		return;
+	}
+	times.push_back(100);
+	if (iteration <= iterationSum(times)) {
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0.01, -0.1);
+		return;
+	}
+	times.push_back(100);
+	if (iteration <= iterationSum(times)) {
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0.01, 0.1);
+		return;
+	}
+	times.push_back(500);
+	if (iteration <= iterationSum(times)) {
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0.01, 0.03);
+		return;
+	}
+	times.push_back(1000);
+	if (iteration <= iterationSum(times)) {
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0.01, 0.05);
+		return;
+	}
+	times.push_back(200);
+	if (iteration <= iterationSum(times)) {
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, -0.05, 0);
+		return;
+	}
+	times.push_back(200);
+	if (iteration <= iterationSum(times)) {
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, -0.1, 0.05);
+		return;
+	}
+	times.push_back(2000);
+	if (iteration <= iterationSum(times)) {
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, -0.3, 0.1);
+		return;
+	}
+	times.push_back(240);
+	if (iteration <= iterationSum(times)) {
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, -0.2, 0.12);
+		return;
+	}
+	times.push_back(240);
+	if (iteration <= iterationSum(times)) {
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, -0.1, 0.14);
+		return;
+	}
+	times.push_back(600);
+	if (iteration <= iterationSum(times)) {
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, -0.1, 0.14);
+		return;
+	}
+	times.push_back(800);
+	if (iteration <= iterationSum(times)) {
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0, 0.04);
+		return;
+	}
+	times.push_back(2000);
+	if (iteration <= iterationSum(times)) {
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0, 0);
+		return;
+	}
+	
+	/*
+	time <= 34) {
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, -0.1, 0.14);
+	}
+	else if (time <= 37.75) {
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0, 0.2);
+	}
+	else if (time <= 3775) {
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0, 0);
+	}
+	*/
+	
+	
+	// 
 
 
 }
@@ -372,7 +506,7 @@ int Application::run()
 		glm::vec3(0,1,0)
 	};
     std::vector<glm::vec3> DirectionalLightIntensities = {
-		glm::vec3(0.6)
+		glm::vec3(1)
 	};
     std::vector<glm::vec3> PointLightPositions = {};
     std::vector<glm::vec3> PointLightIntensities = {};
@@ -398,6 +532,8 @@ int Application::run()
 	float shadowMapSpread = shadowMapSpread*shadowMapSpreadCoeff;
 
 	const auto begin_seconds = glfwGetTime();
+	
+	unsigned long iteration = 0;
 
     // Loop until the user closes the window
     for (auto iterationCount = 0u; !m_GLFWHandle.shouldClose(); ++iterationCount)
@@ -427,7 +563,7 @@ int Application::run()
 		}
 
 		const auto time = seconds - begin_seconds;
-		animationSceneObjects(time);
+		animationSceneObjects(time,iteration);
 
 		glm::mat4 ViewMatrix = viewController.getViewMatrix();
 
@@ -450,6 +586,7 @@ int Application::run()
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::Separator();
             ImGui::Text("Time : %f", time);
+            ImGui::Text("Iteration : %ld", iteration);
             ImGui::Separator();
             ImGui::ColorEditMode(ImGuiColorEditMode_RGB);
             if (ImGui::ColorEdit3("clearColor", clearColor)) {
@@ -545,6 +682,9 @@ int Application::run()
         if (!guiHasFocus) {
             viewController.update(float(ellapsedTime));
         }
+        
+        iteration++;
+        
     }
 
     return 0;
