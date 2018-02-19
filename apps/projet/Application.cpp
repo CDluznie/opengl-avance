@@ -463,6 +463,114 @@ void Application::animationArc170(unsigned long iteration) {
 		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0, -0.02, 0.05);
 		return;
 	}
+	times.push_back(500);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, -0.38, 0.01, 0);
+		return;
+	}
+	times.push_back(700);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0, 0.01, 0.05);
+		return;
+	}
+	times.push_back(400);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0.4, 0.01, 0.2);
+		return;
+	}
+	times.push_back(180);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0.18, 0, 0.2);
+		return;
+	}
+	times.push_back(700);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0, -0.02, 0.8);
+		return;
+	}
+	times.push_back(620);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0.28, 0.007, 0.1);
+		return;
+	}
+	times.push_back(600);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0., 0.007, -0.05);
+		return;
+	}
+	times.push_back(350);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0.08, 0.0, 0.1);
+		return;
+	}
+	speed = 1.5;
+	times.push_back(400);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0.4, -0.05, -0.02);
+		return;
+	}
+	times.push_back(150);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0, 0.1, -0.15);
+		return;
+	}
+	speed = 1;
+	times.push_back(100);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0, 0.05, -0.15);
+		return;
+	}
+	times.push_back(400);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0, 0.09, 0);
+		return;
+	}
+	speed = 0.4;
+	times.push_back(400);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0, 0.1, 0);
+		return;
+	}
+	times.push_back(1800);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0, 0., 0);
+		return;
+	}
+	times.push_back(250);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0, -0.08, 0);
+		return;
+	}
+	speed = 0.8;
+	times.push_back(250);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0, -0.08, 0);
+		return;
+	}
+	speed = 1.6;
+	times.push_back(100);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0, 0, 0);
+		return;
+	}
+	speed = 3;
+	times.push_back(100);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0, 0, 0);
+		return;
+	}
+	speed = 6;
+	times.push_back(100);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0, 0, 0);
+		return;
+	}
+	speed = 12;
+	times.push_back(300);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectArc170], speed, 0, 0, 0);
+		return;
+	}
 }
 
 void Application::animationTieFighter(unsigned long iteration) {
@@ -491,30 +599,47 @@ void Application::animationTieFighter(unsigned long iteration) {
 }	
 	
 void Application::animationsetCamera(unsigned long iteration) {
-	currentViewMatrix = viewController.getViewMatrix();
-	//currentViewMatrix = m_sceneObjects[SceneObjectArc170].camera.getViewMatrix();
-	//currentViewMatrix = innerArcCamera.getViewMatrix();
-	//currentViewMatrix = innerTieCamera.getViewMatrix();
+	if (indexcam == 0)
+		currentViewMatrix = viewController.getViewMatrix();
+	else if (indexcam == 1)
+		currentViewMatrix = m_sceneObjects[SceneObjectArc170].camera.getViewMatrix();
+	else if (indexcam == 2)
+		currentViewMatrix = innerArcCamera.getViewMatrix();
+	else
+		currentViewMatrix = innerTieCamera.getViewMatrix();
+}
+
+void Application::animationLights(unsigned long iteration) {
+	if ((iteration/100) % 2 == 0) {
+		PointLightIntensities[1] = glm::vec3(0);
+	} else {
+		PointLightIntensities[1] = glm::vec3(3000,0,0);
+	}
+	if (iteration < 2000) {
+		if ((iteration/100) % 2 == 0) {
+			PointLightIntensities[2] = glm::vec3(0,500,0);
+		} else {
+			PointLightIntensities[2] = glm::vec3(0,1000,0);
+		} 
+	} else {
+		if ((iteration/100) % 2 == 0) {
+			PointLightIntensities[2] = glm::vec3(2000,0,0);
+		} else {
+			PointLightIntensities[2] = glm::vec3(1000,0,0);
+		} 
+	}
 }
 
 void Application::animationSceneObjects(unsigned long iteration) {
 	animationArc170(iteration);
 	animationTieFighter(iteration);
 	animationsetCamera(iteration);
+	animationLights(iteration);
 }
 
 int Application::run()
 {
     float clearColor[3] = { 0, 0, 0 };
-	
-    std::vector<glm::vec3> DirectionalLightDirs = {
-		glm::vec3(0,1,0)
-	};
-    std::vector<glm::vec3> DirectionalLightIntensities = {
-		glm::vec3(0)
-	};
-    std::vector<glm::vec3> PointLightPositions = {};
-    std::vector<glm::vec3> PointLightIntensities = {};
 
     float DirLightPhiAngleDegrees = 90;
 	float DirLightThetaAngleDegrees = 90;
@@ -563,7 +688,7 @@ int Application::run()
 			computeShadowMap(dirLightProjMatrix, dirLightViewMatrix);
 			directionalSMDirty = false; // Pas de calcul au prochain tour
 		}
-		directionalSMDirty = true;
+		//directionalSMDirty = true;
 		
 		const auto time = seconds - begin_seconds;
 		animationSceneObjects(iteration);
@@ -590,6 +715,10 @@ int Application::run()
             ImGui::Separator();
             ImGui::Text("Time : %f", time);
             ImGui::Text("Iteration : %ld", iteration);
+            ImGui::Separator();
+            if (ImGui::Button("Camera")) {
+				indexcam = (indexcam + 1)%4;
+			}
             ImGui::Separator();
             ImGui::ColorEditMode(ImGuiColorEditMode_RGB);
             if (ImGui::ColorEdit3("clearColor", clearColor)) {

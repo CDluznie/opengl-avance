@@ -68,8 +68,25 @@ private:
     
 
     std::vector<DemoSceneObject> m_sceneObjects;
+    int indexcam = 0;
     FreeflyCamera innerArcCamera;
     FreeflyCamera innerTieCamera;
+     std::vector<glm::vec3> DirectionalLightDirs = {
+		glm::vec3(0,1,0)
+	};
+    std::vector<glm::vec3> DirectionalLightIntensities = {
+		glm::vec3(0.4)
+	};
+    std::vector<glm::vec3> PointLightPositions = {
+		glm::vec3(-1980,230,-65),
+		glm::vec3(-2030,230,-65),
+		glm::vec3(0,-630,-25)
+	};
+    std::vector<glm::vec3> PointLightIntensities = {
+		glm::vec3(2000,0,0),
+		glm::vec3(2000,0,0),
+		glm::vec3(0,1000,0)
+	};
     glm::mat4 currentViewMatrix;
     glmlv::ViewController viewController; //TODO rm;
 
@@ -174,6 +191,7 @@ private:
 	void animationArc170(unsigned long iteration);
 	void animationTieFighter(unsigned long iteration);
 	void animationsetCamera(unsigned long iteration);
+	void animationLights(unsigned long iteration);
 	void animationSceneObjects(unsigned long iteration);
 
 };
