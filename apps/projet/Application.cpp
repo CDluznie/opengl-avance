@@ -309,9 +309,9 @@ void Application::computeShadowMap(glm::mat4 dirLightProjMatrix, glm::mat4 dirLi
 	glViewport(0, 0, m_nDirectionalSMResolution, m_nDirectionalSMResolution);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	glUniformMatrix4fv(uDirLightViewProjMatrix, 1, GL_FALSE, glm::value_ptr(dirLightProjMatrix * dirLightViewMatrix));
-	
 	for (const auto & sceneObject : m_sceneObjects) {
+
+		glUniformMatrix4fv(uDirLightViewProjMatrix, 1, GL_FALSE, glm::value_ptr(dirLightProjMatrix * dirLightViewMatrix * getTransformationMatrixDemoSceneObject(sceneObject)));
 
 		glBindVertexArray(sceneObject.VAO);
 
@@ -511,7 +511,7 @@ int Application::run()
 		glm::vec3(0,1,0)
 	};
     std::vector<glm::vec3> DirectionalLightIntensities = {
-		glm::vec3(1)
+		glm::vec3(0)
 	};
     std::vector<glm::vec3> PointLightPositions = {};
     std::vector<glm::vec3> PointLightIntensities = {};
@@ -563,7 +563,8 @@ int Application::run()
 			computeShadowMap(dirLightProjMatrix, dirLightViewMatrix);
 			directionalSMDirty = false; // Pas de calcul au prochain tour
 		}
-
+		directionalSMDirty = true;
+		
 		const auto time = seconds - begin_seconds;
 		animationSceneObjects(iteration);
 
