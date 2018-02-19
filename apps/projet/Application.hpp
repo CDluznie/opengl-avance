@@ -5,7 +5,8 @@
 #include <glmlv/GLProgram.hpp>
 #include <glmlv/load_obj.hpp>
 #include <glmlv/ViewController.hpp>
-
+#include "FreeflyCamera.hpp"
+#include <glmlv/ViewController.hpp>
 class Application
 {
 public:
@@ -33,12 +34,18 @@ public:
 		glm::vec3 FrontVector;
 		glm::vec3 LeftVector;
 		glm::vec3 UpVector;
+		FreeflyCamera camera;
 	};
 	
 	enum DemoSceneObjectId {
 		SceneObjectSponza = 0,
-		SceneObjectTieInterceptor_1,
+		SceneObjectTieFighter_1,
+		SceneObjectTieFighter_2,
+		SceneObjectTieInterceptor,
+		SceneObjectTiePilot,
+		SceneObjectInnerTie,
 		SceneObjectArc170,
+		SceneObjectInnerArc170,
 		
 		SceneObjectCount
 	};
@@ -61,6 +68,10 @@ private:
     
 
     std::vector<DemoSceneObject> m_sceneObjects;
+    FreeflyCamera innerArcCamera;
+    FreeflyCamera innerTieCamera;
+    glm::mat4 currentViewMatrix;
+    glmlv::ViewController viewController; //TODO rm;
 
 
     GLuint m_GVBO;
@@ -140,7 +151,7 @@ private:
 	static void computeDirectionVectorsDemoSceneObject(DemoSceneObject & sceneObject);
 	glm::mat4 getTransformationMatrixDemoSceneObject(const DemoSceneObject & sceneObject);
 	
-	static void moveDemoSceneObject(DemoSceneObject & sceneObject, float speed, float left, float up);
+	static void moveDemoSceneObject(DemoSceneObject & sceneObject, float speed, float left, float up, float front);
 	
 	static void deleteDemoSceneObject(DemoSceneObject & sceneObject);
 
@@ -160,6 +171,9 @@ private:
 	unsigned long iterationSum(std::vector<unsigned long> current_iterations);
 	
 	void loadSceneObjects();
-	void animationSceneObjects(double time, unsigned long iteration);
+	void animationArc170(unsigned long iteration);
+	void animationTieFighter(unsigned long iteration);
+	void animationsetCamera(unsigned long iteration);
+	void animationSceneObjects(unsigned long iteration);
 
 };
