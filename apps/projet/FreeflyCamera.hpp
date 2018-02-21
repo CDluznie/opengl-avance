@@ -29,26 +29,29 @@ public:
 
 	FreeflyCamera(glm::vec3 Position, float phi, float theta);
 
-	/**
-	 * Change l'angle horizontal de la camera
-	 * @param degrees Nombre de degrées à ajouter à l'angle
-	 */
-	void setHorizontalAngle(float degrees);
-
-	void setVerticalAngle(float degrees);
 	
-	void setFrontAngle(float degrees);
+	void setHorizontalAngle(float a);
 
-	/**
-	 * Change la position de la camera
-	 * @param position La nouvelle position de la camera
-	 */
+	void setVerticalAngle(float a);
+	
+	void setFrontAngle(float a);
+
 	void setPosition(glm::vec3 position);
 
-	/**
-	 * Calcul la viewMatrix de la camera et la renvoie
-	 * @return La viewMatrix de la camera
-	 */
+	
+	void rotateHorizontalAngle(float a);
+	
+	void rotateVerticalAngle(float a);
+	
+	void rotateFrontAngle(float a);
+	
+	void moveFront(float d);
+	
+	void moveUp(float d);
+	
+	void moveLeft(float d);
+	
+
 	glm::mat4 getViewMatrix() const override;
 
 };

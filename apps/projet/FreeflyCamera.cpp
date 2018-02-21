@@ -27,24 +27,53 @@ FreeflyCamera::FreeflyCamera(glm::vec3 Position, float phi, float theta) :
 	setFrontAngle(0);
 }
 
-void FreeflyCamera::setHorizontalAngle(float degrees) {
-	m_fPhi = (degrees);
+void FreeflyCamera::setHorizontalAngle(float a) {
+	m_fPhi = (a);
 	computeDirectionVectors();
 }
 
-void FreeflyCamera::setVerticalAngle(float degrees) {
-	m_fTheta = (degrees);
+void FreeflyCamera::setVerticalAngle(float a) {
+	m_fTheta = (a);
 	computeDirectionVectors();
 }
 
-void FreeflyCamera::setFrontAngle(float degrees) {
-	m_fPsi = (degrees);
+void FreeflyCamera::setFrontAngle(float a) {
+	m_fPsi = (a);
+	computeDirectionVectors();
+}
+
+void FreeflyCamera::rotateHorizontalAngle(float a) {
+	m_fPhi += (a);
+	computeDirectionVectors();
+}
+
+void FreeflyCamera::rotateVerticalAngle(float a) {
+	m_fTheta += (a);
+	computeDirectionVectors();
+}
+
+void FreeflyCamera::rotateFrontAngle(float a) {
+	m_fPsi += (a);
 	computeDirectionVectors();
 }
 
 void FreeflyCamera::setPosition(glm::vec3 position) {
 	m_Position = position;
 }
+
+void FreeflyCamera::moveFront(float d) {
+	m_Position += d*m_FrontVector;
+}
+
+void FreeflyCamera::moveUp(float d) {
+	m_Position += d*m_UpVector;
+}
+
+void FreeflyCamera::moveLeft(float d) {
+	m_Position += d*m_LeftVector;
+}
+
+
 
 void FreeflyCamera::computeDirectionVectors() {
 	m_LeftVector = glm::vec3(sin(m_fPhi + pi() / 2),

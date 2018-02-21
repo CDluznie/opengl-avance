@@ -69,6 +69,7 @@ private:
 
     std::vector<DemoSceneObject> m_sceneObjects;
     int indexcam = 0;
+    FreeflyCamera followCamera;
     FreeflyCamera innerArcCamera;
     FreeflyCamera innerTieCamera;
      std::vector<glm::vec3> DirectionalLightDirs = {

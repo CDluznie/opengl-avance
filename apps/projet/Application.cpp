@@ -345,7 +345,7 @@ void Application::loadSceneObjects() {
 	);
 	m_sceneObjects[SceneObjectTieFighter_1] = createDemoSceneObject(
 		m_AssetsRootPath / m_AppName / "models" / "tief" / "imp_fly_tiefighter.obj",
-		5.f,glm::vec3(0.f, 500.f, -350.f),-90,0
+		5.f,glm::vec3(-1200.f, 500.f, -400.f),-90,0
 	);
 	m_sceneObjects[SceneObjectTieFighter_2] = createDemoSceneObject(
 		m_AssetsRootPath / m_AppName / "models" / "tief" / "imp_fly_tiefighter.obj",
@@ -378,6 +378,10 @@ void Application::loadSceneObjects() {
 	innerTieCamera = FreeflyCamera(
 		glm::vec3(-2000,170,-65),
 		0,0
+	);
+	followCamera = FreeflyCamera(
+		glm::vec3(-1200.f,500.f,480.f),
+		90,0
 	);
 }
 
@@ -575,35 +579,162 @@ void Application::animationArc170(unsigned long iteration) {
 
 void Application::animationTieFighter(unsigned long iteration) {
 	std::vector<unsigned long> times;
-	float speed = -0.4;
-	times.push_back(2800);
+	float speed = -0.6;
+	times.push_back(2500);
 	if (iteration <= iterationSum(times)){
 		moveDemoSceneObject(m_sceneObjects[SceneObjectTieFighter_1], speed, 0, 0, 0);
 		return;
 	}
-	times.push_back(227);
+	speed = -1;
+	times.push_back(100);
 	if (iteration <= iterationSum(times)){
-		moveDemoSceneObject(m_sceneObjects[SceneObjectTieFighter_1], speed, -0.4, 0, 0.15);
+		moveDemoSceneObject(m_sceneObjects[SceneObjectTieFighter_1], speed, 0, 0, 0);
 		return;
 	}
-	times.push_back(227);
+	speed = -1.5;
+	times.push_back(100);
 	if (iteration <= iterationSum(times)){
-		moveDemoSceneObject(m_sceneObjects[SceneObjectTieFighter_1], speed, 0, 0, -0.15);
+		moveDemoSceneObject(m_sceneObjects[SceneObjectTieFighter_1], speed, 0, 0, 0);
 		return;
 	}
+	speed = -2;
+	times.push_back(200);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectTieFighter_1], speed, 0, 0, 0);
+		return;
+	}
+	times.push_back(500);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectTieFighter_1], speed, -0.4, -0.008, -0.2);
+		return;
+	}
+	times.push_back(400);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectTieFighter_1], speed, 0.1, 0.08, 0.2);
+		return;
+	}
+	speed = -1;
+	times.push_back(350);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectTieFighter_1], speed, -0.1, -0.02, 0);
+		return;
+	}
+	times.push_back(400);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectTieFighter_1], speed, 0, -0.02, 0);
+		return;
+	}
+	speed = -2;
 	times.push_back(250);
 	if (iteration <= iterationSum(times)){
-		moveDemoSceneObject(m_sceneObjects[SceneObjectTieFighter_1], speed, 0, 0, 0);
+		moveDemoSceneObject(m_sceneObjects[SceneObjectTieFighter_1], speed, -0.05, -0.1, -0.02);
 		return;
 	}
+	times.push_back(300);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectTieFighter_1], speed, -0.54, 0, -0.2);
+		return;
+	}
+	times.push_back(950);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectTieFighter_1], speed, 0.008, 0.028, 0.08);
+		return;
+	}
+	times.push_back(300);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectTieFighter_1], speed, -0.6, -0.028, 0.3);
+		return;
+	}
+	times.push_back(300);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectTieFighter_1], speed, 0, -0.028, 0.3);
+		return;
+	}
+	times.push_back(560);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectTieFighter_1], speed, 0, 0, 0.01);
+		return;
+	}
+	times.push_back(420);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectTieFighter_1], speed, 0.44, 0, -0.2);
+		return;
+	}
+	times.push_back(850);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectTieFighter_1], speed, 0., 0, -0.4);
+		return;
+	}
+	times.push_back(750);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectTieFighter_1], speed, 0.24, 0, -0.3);
+		return;
+	}
+	times.push_back(850);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectTieFighter_1], speed, 0.0, 0.01, -0.1);
+		return;
+	}
+	speed = -1.5;
+	times.push_back(340);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectTieFighter_1], speed, 0.5, 0.02, -0.2);
+		return;
+	}
+	speed = -1.2;
+	times.push_back(300);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectTieFighter_1], speed, 0, -0.02, -0.2);
+		return;
+	}
+	speed = -0.7;
+	times.push_back(500);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectTieFighter_1], speed, 0, -0.11, -0.1);
+		return;
+	}
+	speed = -0.43;
+	times.push_back(400);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectTieFighter_1], speed, 0.0, -0.08, -0.01);
+		return;
+	}
+	speed = -0.36;
+	times.push_back(1800);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectTieFighter_1], speed, 0.0, 0., 0.);
+		return;
+	}
+	speed = -0.5;
+	times.push_back(800);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectTieFighter_1], speed, 0., 0.07, 0);
+		return;
+	}
+	times.push_back(400);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectTieFighter_1], speed, 0., 0., 0);
+		return;
+	}
+	times.push_back(2000);
+	if (iteration <= iterationSum(times)){
+		moveDemoSceneObject(m_sceneObjects[SceneObjectTieFighter_1], speed, 0.1, 0, -0.15);
+		return;
+	}
+
+	
 }	
 	
 void Application::animationsetCamera(unsigned long iteration) {
 	if (indexcam == 0)
 		currentViewMatrix = viewController.getViewMatrix();
 	else if (indexcam == 1)
-		currentViewMatrix = m_sceneObjects[SceneObjectArc170].camera.getViewMatrix();
+		currentViewMatrix = followCamera.getViewMatrix();
 	else if (indexcam == 2)
+		currentViewMatrix = m_sceneObjects[SceneObjectArc170].camera.getViewMatrix();
+	else if (indexcam == 3)
+		currentViewMatrix = m_sceneObjects[SceneObjectTieFighter_1].camera.getViewMatrix();
+	else if (indexcam == 4)
 		currentViewMatrix = innerArcCamera.getViewMatrix();
 	else
 		currentViewMatrix = innerTieCamera.getViewMatrix();
@@ -717,7 +848,7 @@ int Application::run()
             ImGui::Text("Iteration : %ld", iteration);
             ImGui::Separator();
             if (ImGui::Button("Camera")) {
-				indexcam = (indexcam + 1)%4;
+				indexcam = (indexcam + 1)%6;
 			}
             ImGui::Separator();
             ImGui::ColorEditMode(ImGuiColorEditMode_RGB);
