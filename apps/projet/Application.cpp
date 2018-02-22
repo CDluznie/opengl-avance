@@ -412,7 +412,7 @@ void Application::loadSceneObjects() {
 		0,0
 	);
 	followCamera = FreeflyCamera(
-		glm::vec3(-1200.f,500.f,480.f),
+		glm::vec3(-1300.f,525.f,480.f),
 		90,0
 	);
 }
@@ -757,6 +757,16 @@ void Application::animationTieFighter(unsigned long iteration) {
 	
 }	
 	
+void Application::animationFollowCamera(unsigned long iteration) {
+	std::vector<unsigned long> times;
+	float speed = 0.6;
+	times.push_back(2500);
+	if (iteration <= iterationSum(times)){
+		followCamera.moveFront(speed);
+		return;
+	}
+}
+
 void Application::animationsetCamera(unsigned long iteration) {
 	if (indexcam == 0)
 		currentViewMatrix = viewController.getViewMatrix();
@@ -793,9 +803,14 @@ void Application::animationLights(unsigned long iteration) {
 	}
 }
 
+void Application::animationEffect(unsigned long iteration) {
+	currentEffect = PostEffectNone;
+}
+
 void Application::animationSceneObjects(unsigned long iteration) {
 	animationArc170(iteration);
 	animationTieFighter(iteration);
+	animationFollowCamera(iteration);
 	animationsetCamera(iteration);
 	animationLights(iteration);
 }

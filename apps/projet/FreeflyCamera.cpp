@@ -1,5 +1,7 @@
 #include "FreeflyCamera.hpp"
 
+#include <iostream>
+
 // Pour palier aux soucis de macro M_PI sous windows , vu que c'est une norme POSX
 constexpr double pi() { return std::atan2(0, -1); }
 
@@ -87,6 +89,7 @@ void FreeflyCamera::computeDirectionVectors() {
 }
 
 glm::mat4 FreeflyCamera::getViewMatrix() const {
-	return m_ViewMatrix;
+	auto ViewMatrix = glm::rotate(glm::mat4(1.f), (-m_fPsi), glm::vec3(0,0,1))*glm::lookAt(m_Position, m_Position + m_FrontVector, m_UpVector);
+	return ViewMatrix;
 
 }

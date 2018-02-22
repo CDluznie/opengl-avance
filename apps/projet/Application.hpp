@@ -207,8 +207,10 @@ private:
 	void loadSceneObjects();
 	void animationArc170(unsigned long iteration);
 	void animationTieFighter(unsigned long iteration);
+	void animationFollowCamera(unsigned long iteration);
 	void animationsetCamera(unsigned long iteration);
 	void animationLights(unsigned long iteration);
+	void animationEffect(unsigned long iteration);
 	void animationSceneObjects(unsigned long iteration);
 
 };
