@@ -49,6 +49,12 @@ public:
 		
 		SceneObjectCount
 	};
+	
+	enum PostEffect {
+		PostEffectNone = 0,
+		PostEffectGamma,
+		PostEffectCount
+	};
 
     Application(int argc, char** argv);
     
@@ -121,11 +127,18 @@ private:
 	GLuint m_directionalSMFBO;
 	GLuint m_directionalSMSampler;
 	int32_t m_nDirectionalSMResolution = 4096;
+	
+	PostEffect currentEffect = PostEffectNone;
+	GLuint m_BeautyTexture;
+    GLuint m_BeautyFBO;
+    GLuint m_GammaCorrectedBeautyTexture;
+    GLuint m_GammaCorrectedBeautyFBO;
 
     
     glmlv::GLProgram m_programGeometryPass;
     glmlv::GLProgram m_programShadingPass;
     glmlv::GLProgram m_directionalSMProgram;
+    glmlv::GLProgram m_gammaCorrectionProgram;
 
     GLint uModelViewProjMatrix;
     GLint uModelViewMatrix;
@@ -153,6 +166,7 @@ private:
 	GLint uSPDirLightShadowMapBias;
 	GLint uDirLightShadowMapSampleCount;
 	GLint uDirLightShadowMapSpread;
+	GLint uGammaExponent;
 	
 	GLuint ssboLightInfos;
 
@@ -185,6 +199,8 @@ private:
 	);
 	
 	void computeShadowMap(glm::mat4 dirLightProjMatrix, glm::mat4 dirLightViewMatrix);
+	
+	void computePostEffect();
 	
 	unsigned long iterationSum(std::vector<unsigned long> current_iterations);
 	

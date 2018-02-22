@@ -240,6 +240,8 @@ void Application::shadingPass(
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 	m_programShadingPass.use();
+	
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_BeautyFBO); 
 
 
 	glUniform1i(uGPosition, 0);
@@ -298,6 +300,8 @@ void Application::shadingPass(
 	glDrawArrays(GL_TRIANGLES, 0, 3);
         
 	glBindVertexArray(0);
+	
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); 
 
 }
 
@@ -329,6 +333,34 @@ void Application::computeShadowMap(glm::mat4 dirLightProjMatrix, glm::mat4 dirLi
 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
+}
+
+void Application::computePostEffect() {
+	if (currentEffect == PostEffectNone) {
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_BeautyFBO);
+		glReadBuffer(GL_COLOR_ATTACHMENT0);
+        glBlitFramebuffer(
+        	0,0,m_nWindowWidth,m_nWindowHeight,
+        	0,0,m_nWindowWidth,m_nWindowHeight,
+        	GL_COLOR_BUFFER_BIT, GL_NEAREST
+        );
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+        return;
+	}
+	m_gammaCorrectionProgram.use();
+	glUniform1f(uGammaExponent, 0.7);
+	glBindImageTexture(0, m_BeautyTexture, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+	glBindImageTexture(1, m_GammaCorrectedBeautyTexture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+	glDispatchCompute(m_nWindowWidth, m_nWindowHeight, 1);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, m_GammaCorrectedBeautyFBO);
+	glReadBuffer(GL_COLOR_ATTACHMENT0);
+	glBlitFramebuffer(
+		0,0,m_nWindowWidth,m_nWindowHeight,
+		0,0,m_nWindowWidth,m_nWindowHeight,
+		GL_COLOR_BUFFER_BIT, GL_NEAREST
+	);
+
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 }
 
 unsigned long Application::iterationSum(std::vector<unsigned long> current_iterations) {
@@ -837,6 +869,7 @@ int Application::run()
 			shadowMapBias, shadowMapSampleCount, shadowMapSpread
 		);
         
+        computePostEffect();  
 
         // GUI code:
         ImGui_ImplGlfwGL3_NewFrame();
@@ -849,6 +882,9 @@ int Application::run()
             ImGui::Separator();
             if (ImGui::Button("Camera")) {
 				indexcam = (indexcam + 1)%6;
+			}
+            if (ImGui::Button("Effect")) {
+				currentEffect = static_cast<PostEffect>((currentEffect+1)%PostEffectCount);
 			}
             ImGui::Separator();
             ImGui::ColorEditMode(ImGuiColorEditMode_RGB);
@@ -1017,6 +1053,7 @@ Application::Application(int argc, char** argv):
     m_programGeometryPass = glmlv::compileProgram({ m_ShadersRootPath / m_AppName / "geometryPass.vs.glsl", m_ShadersRootPath / m_AppName / "geometryPass.fs.glsl" });
     m_programShadingPass = glmlv::compileProgram({ m_ShadersRootPath / m_AppName / "shadingPass.vs.glsl", m_ShadersRootPath / m_AppName / "shadingPass.fs.glsl" });
     m_directionalSMProgram = glmlv::compileProgram({ m_ShadersRootPath / m_AppName / "directionalSM.vs.glsl", m_ShadersRootPath / m_AppName / "directionalSM.fs.glsl" });
+	m_gammaCorrectionProgram = glmlv::compileProgram({ m_ShadersRootPath / m_AppName / "gammaCorrect.cs.glsl" });
 
     uModelViewProjMatrix = glGetUniformLocation(m_programGeometryPass.glId(), "uModelViewProjMatrix");
     uModelViewMatrix = glGetUniformLocation(m_programGeometryPass.glId(), "uModelViewMatrix");
@@ -1044,6 +1081,7 @@ Application::Application(int argc, char** argv):
 	uSPDirLightShadowMapBias = glGetUniformLocation(m_programShadingPass.glId(), "uSPDirLightShadowMapBias");
 	uDirLightShadowMapSampleCount = glGetUniformLocation(m_programShadingPass.glId(), "uDirLightShadowMapSampleCount");
 	uDirLightShadowMapSpread = glGetUniformLocation(m_programShadingPass.glId(), "uDirLightShadowMapSpread");
+	uGammaExponent = glGetUniformLocation(m_gammaCorrectionProgram.glId(), "uGammaExponent");
 
 	// --- Texture init ---
 	
@@ -1113,6 +1151,37 @@ Application::Application(int argc, char** argv):
 	glSamplerParameteri(m_directionalSMSampler, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 	glSamplerParameteri(m_directionalSMSampler, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
 	glSamplerParameteri(m_directionalSMSampler, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+
+	
+	//
+	
+	glGenTextures(1, &m_BeautyTexture);
+	glBindTexture(GL_TEXTURE_2D, m_BeautyTexture);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, m_nWindowWidth, m_nWindowHeight);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glGenFramebuffers(1, &m_BeautyFBO);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_BeautyFBO);
+	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, m_BeautyTexture, 0);
+	glDrawBuffer(GL_COLOR_ATTACHMENT0);
+	
+	std::cerr << "Framebuffer pre-prerocessing status : " << (glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) ==  GL_FRAMEBUFFER_COMPLETE) << std::endl;
+	
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); 
+
+	glGenTextures(1, &m_GammaCorrectedBeautyTexture);
+	glBindTexture(GL_TEXTURE_2D, m_GammaCorrectedBeautyTexture);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, m_nWindowWidth, m_nWindowHeight);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glGenFramebuffers(1, &m_GammaCorrectedBeautyFBO);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_GammaCorrectedBeautyFBO);
+	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, m_GammaCorrectedBeautyTexture, 0);
+	glDrawBuffer(GL_COLOR_ATTACHMENT0);
+	
+	std::cerr << "Framebuffer post-processing gamma correct status : " << (glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) ==  GL_FRAMEBUFFER_COMPLETE) << std::endl;
+	
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); 
 
 }
 
