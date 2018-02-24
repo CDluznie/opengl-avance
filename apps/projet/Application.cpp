@@ -131,6 +131,13 @@ void Application::deleteDemoSceneObject(Application::DemoSceneObject & sceneObje
  	glDeleteTextures(sceneObject.texObjects.size(), sceneObject.texObjects.data());
 }
 
+void Application::moveFollowCamera(float speed, float left, float up, float front) {
+	followCamera.moveFront(speed);
+	followCamera.rotateHorizontalAngle(left);
+	followCamera.rotateVerticalAngle(up);
+	followCamera.rotateFrontAngle(front);
+}
+
 void Application::geometryPass(const glm::mat4 & ProjMatrix, const glm::mat4 & ViewMatrix) {
 
 	m_programGeometryPass.use();
@@ -757,12 +764,197 @@ void Application::animationTieFighter(unsigned long iteration) {
 	
 }	
 	
+float Application::interpole(int t, int max, float fo, float fc) {
+	float alpha =  glm::clamp(float(t)/max, 0.f, 1.f);
+	return alpha*fc + (1-alpha)*fo;
+}
+
 void Application::animationFollowCamera(unsigned long iteration) {
 	std::vector<unsigned long> times;
 	float speed = 0.6;
+	static float tmp;
 	times.push_back(2500);
 	if (iteration <= iterationSum(times)){
-		followCamera.moveFront(speed);
+		moveFollowCamera(speed, 0, 0, 0);
+		return;
+	}
+	speed = 1;
+	times.push_back(100);
+	if (iteration <= iterationSum(times)){
+		moveFollowCamera(speed, 0, 0, 0);
+		return;
+	}
+	speed = 1.5;
+	times.push_back(100);
+	if (iteration <= iterationSum(times)){
+		moveFollowCamera(speed, 0, 0, 0);
+		return;
+	}
+	speed = 2;
+	times.push_back(250);
+	if (iteration <= iterationSum(times)){
+		moveFollowCamera(speed, 0, 0, 0);
+		return;
+	}
+	times.push_back(186);
+	if (iteration <= iterationSum(times)){
+		static int t = 0;
+		moveFollowCamera(speed, interpole(t,186,0,0.015), 0, 0);
+		t++;
+		return;
+	}
+	times.push_back(300);
+	if (iteration <= iterationSum(times)){
+		static int t = 0;
+		moveFollowCamera(speed, interpole(t,40,0.015,0), 0, 0);
+		t++;
+		return;
+	}
+	times.push_back(130);
+	if (iteration <= iterationSum(times)){
+		static int t = 0;
+		moveFollowCamera(speed, interpole(t,130,0,0.02), 0, 0);
+		t++;
+		return;
+	}
+	times.push_back(280);
+	if (iteration <= iterationSum(times)){
+		static int t = 0;
+		moveFollowCamera(speed, interpole(t,20,0.02,0), 0, 0);
+		t++;
+		return;
+	}
+	times.push_back(220);
+	if (iteration <= iterationSum(times)){
+		static int t = 0;
+		moveFollowCamera(speed, interpole(t,250,0,0.0065), interpole(t,250,0,0.001), 0);
+		t++;
+		return;
+	}
+	times.push_back(300);
+	if (iteration <= iterationSum(times)){
+		static int t = 0;
+		moveFollowCamera(speed, interpole(t,300,0.0065,-0.011), interpole(t,300,0.001,-0.006), 0);
+		t++;
+		return;
+	}
+	times.push_back(300);
+	if (iteration <= iterationSum(times)){
+		static int t = 0;
+		moveFollowCamera(speed, interpole(t,20,-0.011,0), interpole(t,300,-0.006,0.011), 0);
+		t++;
+		return;
+	}
+	times.push_back(440);
+	if (iteration <= iterationSum(times)){
+		static int t = 0;
+		moveFollowCamera(speed, interpole(t,440,0,-0.014), interpole(t,10,0.011,0), 0);
+		t++;
+		return;
+	}
+	times.push_back(1000);
+	if (iteration <= iterationSum(times)){
+		static int t = 0;
+		moveFollowCamera(speed, interpole(t,4,-0.014,0), interpole(t,1000,0,-0.001), 0);
+		t++;
+		return;
+	}
+	times.push_back(300);
+	if (iteration <= iterationSum(times)){
+		static int t = 0;
+		moveFollowCamera(speed, interpole(t,100,0,-0.012), interpole(t,100,-0.001,0.001), 0);
+		t++;
+		return;
+	}
+	times.push_back(800);
+	if (iteration <= iterationSum(times)){
+		static int t = 0;
+		moveFollowCamera(speed, interpole(t,20,-0.012,0.),  interpole(t,400,0.001,0), 0);
+		t++;
+		return;
+	}
+	times.push_back(420);
+	if (iteration <= iterationSum(times)){
+		static int t = 0;
+		moveFollowCamera(speed, interpole(t,420,0,0.014),  interpole(t,400,0,0.0002), 0);
+		t++;
+		return;
+	}
+	times.push_back(900);
+	if (iteration <= iterationSum(times)){
+		static int t = 0;
+		moveFollowCamera(speed, interpole(t,20,0.014,0), interpole(t,900,0.0002,-0.0007), 0);
+		t++;
+		return;
+	}
+	times.push_back(300);
+	if (iteration <= iterationSum(times)){
+		static int t = 0;
+		moveFollowCamera(speed, interpole(t,300,0,0.011), interpole(t,300,-0.0007,0.0018), 0);
+		t++;
+		return;
+	}
+	times.push_back(250);
+	if (iteration <= iterationSum(times)){
+		static int t = 0;
+		moveFollowCamera(speed, interpole(t,50,0.011,0), interpole(t,100,0.0018,0), 0);
+		t++;
+		return;
+	}
+	times.push_back(300);
+	if (iteration <= iterationSum(times)){
+		static int t = 0;
+		moveFollowCamera(speed, interpole(t,50,0,0.005), interpole(t,100,0,-0.0007), 0);
+		t++;
+		return;
+	}
+	times.push_back(800);
+	if (iteration <= iterationSum(times)){
+		static int t = 0;
+		moveFollowCamera(speed, interpole(t,20,0.005,0), interpole(t,10,-0.0007,0), 0);
+		t++;
+		return;
+	}
+	times.push_back(300);
+	if (iteration <= iterationSum(times)){
+		static int t = 0;
+		moveFollowCamera(interpole(t,300,speed,1.5), interpole(t,260,0.005,0.0125), 0, 0);
+		t++;
+		return;
+	}
+	times.push_back(500);
+	if (iteration <= iterationSum(times)){
+		static int t = 0;
+		moveFollowCamera(interpole(t,500,1.5,0.5), interpole(t,40,0.0125,0), 0, 0);
+		t++;
+		return;
+	}
+	times.push_back(500);
+	if (iteration <= iterationSum(times)){
+		static int t = 0;
+		moveFollowCamera(0.5, 0, interpole(t,500,0,0.0035), 0);
+		t++;
+		return;
+	}
+	times.push_back(2400);
+	if (iteration <= iterationSum(times)){
+		static int t = 0;
+		moveFollowCamera(interpole(t,1000,0.5,0.35), 0, interpole(t,300,0.0035,0.), 0);
+		t++;
+		return;
+	}
+	times.push_back(500);
+	if (iteration <= iterationSum(times)){
+		static int t = 0;
+		moveFollowCamera(interpole(t,500,0.35,0.5), 0, interpole(t,300,0.,-0.003), 0);
+		t++;
+		return;
+	}
+	times.push_back(800);
+	if (iteration <= iterationSum(times)){
+		static int t = 0;
+		moveFollowCamera(interpole(t,800,0.5,0), 0, 0, 0);
+		t++;
 		return;
 	}
 }

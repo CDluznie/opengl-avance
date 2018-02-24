@@ -187,6 +187,8 @@ private:
 	
 	static void deleteDemoSceneObject(DemoSceneObject & sceneObject);
 
+	void moveFollowCamera(float speed, float left, float up, float front);
+
 	void geometryPass(const glm::mat4 & ProjMatrix, const glm::mat4 & ViewMatrix);
 
 	void shadingPass(
@@ -203,6 +205,7 @@ private:
 	void computePostEffect();
 	
 	unsigned long iterationSum(std::vector<unsigned long> current_iterations);
+	float interpole(int t, int max, float fo, float fc);
 	
 	void loadSceneObjects();
 	void animationArc170(unsigned long iteration);
