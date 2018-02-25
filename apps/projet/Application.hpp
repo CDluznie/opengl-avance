@@ -176,6 +176,7 @@ private:
 
 	static DemoSceneObject createDemoSceneObject(const glmlv::fs::path & objPath);
 	static DemoSceneObject createDemoSceneObject(const glmlv::fs::path & objPath, float scale, glm::vec3 translate, float phi, float theta);
+	static void resetDemoSceneObject(DemoSceneObject & sceneObject, glm::vec3 translate, float phi, float theta);
 
 	static void moveLeftDemoSceneObject(DemoSceneObject & sceneObject, float t);
 	static void moveFrontDemoSceneObject(DemoSceneObject & sceneObject, float t);
@@ -211,6 +212,7 @@ private:
 	float interpole(int t, int max, float fo, float fc);
 	
 	void loadSceneObjects();
+	void resetSceneObjects();
 	void animationArc170(unsigned long iteration);
 	void animationTieFighter(unsigned long iteration);
 	void animationFollowCamera(unsigned long iteration);
