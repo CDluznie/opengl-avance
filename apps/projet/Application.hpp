@@ -40,8 +40,6 @@ public:
 	enum DemoSceneObjectId {
 		SceneObjectSponza = 0,
 		SceneObjectTieFighter_1,
-		SceneObjectTieFighter_2,
-		SceneObjectTieInterceptor,
 		SceneObjectTiePilot,
 		SceneObjectInnerTie,
 		SceneObjectArc170,

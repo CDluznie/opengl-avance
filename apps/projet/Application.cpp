@@ -393,14 +393,6 @@ void Application::loadSceneObjects() {
 		m_AssetsRootPath / m_AppName / "models" / "tief" / "imp_fly_tiefighter.obj",
 		5.f,glm::vec3(-1200.f, 500.f, -400.f),-90,0
 	);
-	m_sceneObjects[SceneObjectTieFighter_2] = createDemoSceneObject(
-		m_AssetsRootPath / m_AppName / "models" / "tief" / "imp_fly_tiefighter.obj",
-		5.f,glm::vec3(0.f, 0.f,0.f),0,0
-	);
-	m_sceneObjects[SceneObjectTieInterceptor] = createDemoSceneObject(
-		m_AssetsRootPath / m_AppName / "models" / "tiei" / "imp_fly_tieinterceptor.obj",
-		5.f,glm::vec3(0.f, 0.f,0.f),0,0
-	);
 	m_sceneObjects[SceneObjectArc170] = createDemoSceneObject(
 		m_AssetsRootPath / m_AppName / "models" / "arc" / "Arc170.obj",
 		0.05f, glm::vec3(-1200.f,500.f,480.f),90,0
@@ -1011,8 +1003,8 @@ void Application::animationEffect(unsigned long iteration) {
 		currentEffect = PostEffectBlackFade;
 		t++;
 	}
-	int time = 15000;
-	if (time <= iteration ) {
+	int time = 15250;
+	if (time <= iteration ) { //todo sur r2 cam
 		static int t = 0;
 		blackFadeAlpha = 1-float(t)/fadetime;
 		currentEffect = PostEffectBlackFade;
