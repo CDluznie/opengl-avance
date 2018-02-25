@@ -52,6 +52,7 @@ public:
 	
 	enum PostEffect {
 		PostEffectNone = 0,
+		PostEffectBlackFade,
 		PostEffectGamma,
 		PostEffectCount
 	};
@@ -97,6 +98,8 @@ private:
     glm::mat4 currentViewMatrix;
     glmlv::ViewController viewController; //TODO rm;
 
+	float blackFadeAlpha;
+
 
     GLuint m_GVBO;
     GLuint m_GVAO;
@@ -139,6 +142,7 @@ private:
     glmlv::GLProgram m_programShadingPass;
     glmlv::GLProgram m_directionalSMProgram;
     glmlv::GLProgram m_gammaCorrectionProgram;
+    glmlv::GLProgram m_blackFadeProgram;
 
     GLint uModelViewProjMatrix;
     GLint uModelViewMatrix;
@@ -167,6 +171,7 @@ private:
 	GLint uDirLightShadowMapSampleCount;
 	GLint uDirLightShadowMapSpread;
 	GLint uGammaExponent;
+	GLint uAlpha;
 	
 	GLuint ssboLightInfos;
 

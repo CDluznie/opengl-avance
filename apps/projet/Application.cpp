@@ -354,8 +354,15 @@ void Application::computePostEffect() {
         glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
         return;
 	}
-	m_gammaCorrectionProgram.use();
-	glUniform1f(uGammaExponent, 0.7);
+	if (currentEffect == PostEffectGamma) {
+		m_gammaCorrectionProgram.use();
+		glUniform1f(uGammaExponent, 0.7);
+	} else if (currentEffect == PostEffectBlackFade) {
+		m_blackFadeProgram.use();
+		glUniform1f(uAlpha, blackFadeAlpha);
+	} else {
+		return;
+	}
 	glBindImageTexture(0, m_BeautyTexture, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 	glBindImageTexture(1, m_GammaCorrectedBeautyTexture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 	glDispatchCompute(m_nWindowWidth, m_nWindowHeight, 1);
@@ -946,14 +953,14 @@ void Application::animationFollowCamera(unsigned long iteration) {
 	times.push_back(500);
 	if (iteration <= iterationSum(times)){
 		static int t = 0;
-		moveFollowCamera(interpole(t,500,0.35,0.5), 0, interpole(t,300,0.,-0.003), 0);
+		moveFollowCamera(interpole(t,500,0.35,0.5), 0, interpole(t,300,0.,-0.0028), 0);
 		t++;
 		return;
 	}
 	times.push_back(800);
 	if (iteration <= iterationSum(times)){
 		static int t = 0;
-		moveFollowCamera(interpole(t,800,0.5,0), 0, 0, 0);
+		moveFollowCamera(interpole(t,800,0.5,0), 0, interpole(t,50,-0.0028,0), 0);
 		t++;
 		return;
 	}
@@ -997,6 +1004,20 @@ void Application::animationLights(unsigned long iteration) {
 
 void Application::animationEffect(unsigned long iteration) {
 	currentEffect = PostEffectNone;
+	int fadetime = 500;
+	if (iteration <= 500) {
+		static int t = 0;
+		blackFadeAlpha = float(t)/fadetime;
+		currentEffect = PostEffectBlackFade;
+		t++;
+	}
+	int time = 15000;
+	if (time <= iteration ) {
+		static int t = 0;
+		blackFadeAlpha = 1-float(t)/fadetime;
+		currentEffect = PostEffectBlackFade;
+		t++;
+	}
 }
 
 void Application::animationSceneObjects(unsigned long iteration) {
@@ -1005,6 +1026,7 @@ void Application::animationSceneObjects(unsigned long iteration) {
 	animationFollowCamera(iteration);
 	animationsetCamera(iteration);
 	animationLights(iteration);
+	animationEffect(iteration);
 }
 
 int Application::run()
@@ -1058,7 +1080,9 @@ int Application::run()
 			computeShadowMap(dirLightProjMatrix, dirLightViewMatrix);
 			directionalSMDirty = false; // Pas de calcul au prochain tour
 		}
-		//directionalSMDirty = true;
+		if (iteration%4 == 0) {
+			directionalSMDirty = true;
+		}
 		
 		const auto time = seconds - begin_seconds;
 		animationSceneObjects(iteration);
@@ -1261,6 +1285,7 @@ Application::Application(int argc, char** argv):
     m_programShadingPass = glmlv::compileProgram({ m_ShadersRootPath / m_AppName / "shadingPass.vs.glsl", m_ShadersRootPath / m_AppName / "shadingPass.fs.glsl" });
     m_directionalSMProgram = glmlv::compileProgram({ m_ShadersRootPath / m_AppName / "directionalSM.vs.glsl", m_ShadersRootPath / m_AppName / "directionalSM.fs.glsl" });
 	m_gammaCorrectionProgram = glmlv::compileProgram({ m_ShadersRootPath / m_AppName / "gammaCorrect.cs.glsl" });
+	m_blackFadeProgram = glmlv::compileProgram({ m_ShadersRootPath / m_AppName / "blackFade.cs.glsl" });
 
     uModelViewProjMatrix = glGetUniformLocation(m_programGeometryPass.glId(), "uModelViewProjMatrix");
     uModelViewMatrix = glGetUniformLocation(m_programGeometryPass.glId(), "uModelViewMatrix");
@@ -1289,6 +1314,7 @@ Application::Application(int argc, char** argv):
 	uDirLightShadowMapSampleCount = glGetUniformLocation(m_programShadingPass.glId(), "uDirLightShadowMapSampleCount");
 	uDirLightShadowMapSpread = glGetUniformLocation(m_programShadingPass.glId(), "uDirLightShadowMapSpread");
 	uGammaExponent = glGetUniformLocation(m_gammaCorrectionProgram.glId(), "uGammaExponent");
+	uAlpha = glGetUniformLocation(m_blackFadeProgram.glId(), "uAlpha");
 
 	// --- Texture init ---
 	
