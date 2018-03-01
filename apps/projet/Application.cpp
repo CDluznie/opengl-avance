@@ -1208,7 +1208,7 @@ int Application::run()
 			DirectionalLightDirs, DirectionalLightIntensities,
 			PointLightPositions, PointLightIntensities,
 			DirLightDirection, DirectionalLightIntensity,
-			ViewMatrix, viewController.getRcpViewMatrix(),
+			ViewMatrix, glm::inverse(ViewMatrix),
 			dirLightProjMatrix, dirLightViewMatrix,
 			shadowMapBias, shadowMapSampleCount, shadowMapSpread
 		);
