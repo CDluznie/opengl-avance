@@ -431,14 +431,14 @@ void Application::loadSceneObjects() {
 	);
 	m_sceneObjects[SceneObjectInnerTie] = createDemoSceneObject(
 		m_AssetsRootPath / m_AppName / "models" / "tiei" / "imp_fly_tieinterceptor.obj",
-		51.75f,glm::vec3(-2000.f, 100.f,0.f),0,0
+		51.75f,glm::vec3(0.f, -2900.f,0.f),0,0
 	);
 	m_sceneObjects[SceneObjectTiePilot] = createDemoSceneObject(
 		m_AssetsRootPath / m_AppName / "models" / "tiep" / "imp_inf_pilot.obj",
-		115.f, glm::vec3(-2000,-40,0),0,0
+		115.f, glm::vec3(0,-3040,0),0,0
 	);
 	innerTieCamera = FreeflyCamera(
-		glm::vec3(-2000,170,-65),
+		glm::vec3(0,-2830,-65),
 		0,0
 	);
 	followCamera = FreeflyCamera(
@@ -1068,6 +1068,7 @@ void Application::animationFollowCamera(unsigned long iteration) {
 }
 
 void Application::animationsetCamera(unsigned long iteration) {
+	/*
 	if (indexcam == 0)
 		currentViewMatrix = viewController.getViewMatrix();
 	else if (indexcam == 1)
@@ -1082,6 +1083,44 @@ void Application::animationsetCamera(unsigned long iteration) {
 		currentViewMatrix = innerArcCamera.getViewMatrix();
 	else
 		currentViewMatrix = innerTieCamera.getViewMatrix();
+	*/
+	if (iteration <= 350) {
+		currentViewMatrix = followCamera.getViewMatrix();
+	} else if (iteration <= 850) {
+		currentViewMatrix = innerArcCamera.getViewMatrix();
+	} else if (iteration <= 1550) {
+		currentViewMatrix =  m_sceneObjects[SceneObjectArc170].OutCamera;
+	} else if (iteration <= 2420) {
+		currentViewMatrix = innerArcCamera.getViewMatrix();
+	} else if (iteration <= 7900) {
+		currentViewMatrix = followCamera.getViewMatrix();
+	} else if (iteration <= 8360) {
+		currentViewMatrix = m_sceneObjects[SceneObjectArc170].OutCamera;
+	} else if (iteration <= 9450) {
+		currentViewMatrix = followCamera.getViewMatrix();
+	} else if (iteration <= 9910) {
+		currentViewMatrix = innerTieCamera.getViewMatrix();
+	} else if (iteration <= 10700) {
+		currentViewMatrix = followCamera.getViewMatrix();
+	} else if (iteration <= 11070) {
+		currentViewMatrix = m_sceneObjects[SceneObjectArc170].camera.getViewMatrix();
+	} else if (iteration <= 11600) {
+		currentViewMatrix = innerArcCamera.getViewMatrix();
+	} else if (iteration <= 11900) {
+		currentViewMatrix = m_sceneObjects[SceneObjectArc170].OutCamera;
+	} else if (iteration <= 12400) {
+		currentViewMatrix = followCamera.getViewMatrix();
+	} else if (iteration <= 12950) {
+		currentViewMatrix = innerTieCamera.getViewMatrix();
+	} else if (iteration <= 14000) {
+		currentViewMatrix = followCamera.getViewMatrix();
+	} else if (iteration <= 16400) {
+		currentViewMatrix = followCamera.getViewMatrix();
+	} else if (iteration <= 17200) {
+		currentViewMatrix = innerArcCamera.getViewMatrix();
+	} else {
+		currentViewMatrix = m_sceneObjects[SceneObjectArc170].OutCamera;
+	}
 }
 
 void Application::animationLights(unsigned long iteration) {
@@ -1090,7 +1129,7 @@ void Application::animationLights(unsigned long iteration) {
 	} else {
 		PointLightIntensities[1] = glm::vec3(3000,0,0);
 	}
-	if (iteration < 2000) {
+	if (iteration < 2000 || iteration > 16000) {
 		if ((iteration/100) % 2 == 0) {
 			PointLightIntensities[2] = glm::vec3(0,500,0);
 		} else {
@@ -1107,12 +1146,12 @@ void Application::animationLights(unsigned long iteration) {
 
 void Application::animationEffect(unsigned long iteration) {
 	currentEffect = PostEffectNone;
-	int fadetime = 500;
-	if (iteration <= 500) {
-		blackFadeAlpha = float(iteration)/fadetime;
+	int fadetime = 200;
+	if (iteration <= 350) {
+		blackFadeAlpha = (iteration > fadetime) ? (1) : (float(iteration)/fadetime);
 		currentEffect = PostEffectBlackFade;
 	}
-	int time = 15250;
+	int time = 17500;
 	if (time <= iteration ) { //todo sur r2 cam
 		blackFadeAlpha = 1-float(iteration-time)/fadetime;
 		currentEffect = PostEffectBlackFade;
@@ -1188,7 +1227,7 @@ int Application::run()
 			computeShadowMap(dirLightProjMatrix, dirLightViewMatrix);
 			directionalSMDirty = false; // Pas de calcul au prochain tour
 		}
-		if (iteration%4 == 0) {
+		if (iteration%3 == 0) {
 			directionalSMDirty = true;
 		}
 		
@@ -1329,7 +1368,7 @@ int Application::run()
         if (isPlaying) {
 			iteration++;
 		}
-		if (iteration == 16000) {
+		if (iteration == 18000) {
 			isPlaying = false;
 			iteration = 0;
 			resetSceneObjects();

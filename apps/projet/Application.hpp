@@ -86,8 +86,8 @@ private:
 		glm::vec3(0.4)
 	};
     std::vector<glm::vec3> PointLightPositions = {
-		glm::vec3(-1980,230,-65),
-		glm::vec3(-2030,230,-65),
+		glm::vec3(20,-2770,-65),
+		glm::vec3(-30,-2770,-65),
 		glm::vec3(0,-630,-25)
 	};
     std::vector<glm::vec3> PointLightIntensities = {
@@ -96,7 +96,7 @@ private:
 		glm::vec3(0,1000,0)
 	};
     glm::mat4 currentViewMatrix;
-    glmlv::ViewController viewController; //TODO rm;
+    glmlv::ViewController viewController;
 
 	float blackFadeAlpha;
 
