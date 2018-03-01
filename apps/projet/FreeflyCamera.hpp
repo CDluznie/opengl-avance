@@ -19,8 +19,6 @@ private:
 	float m_fPhi, m_fTheta, m_fPsi;
 	glm::vec3 m_FrontVector, m_LeftVector, m_UpVector;
 
-	glm::mat4 m_ViewMatrix = glm::mat4(1);
-
 	void computeDirectionVectors();
 
 public:

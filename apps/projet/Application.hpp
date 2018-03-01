@@ -35,6 +35,8 @@ public:
 		glm::vec3 LeftVector;
 		glm::vec3 UpVector;
 		FreeflyCamera camera;
+		FreeflyCamera outCamera;
+		glm::mat4 OutCamera;
 	};
 	
 	enum DemoSceneObjectId {

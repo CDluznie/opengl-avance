@@ -59,6 +59,7 @@ Application::DemoSceneObject Application::createDemoSceneObject(const glmlv::fs:
 	sceneObject.fPsi = 0;
 	computeDirectionVectorsDemoSceneObject(sceneObject);
 	sceneObject.camera = FreeflyCamera(translate, phi, theta);
+	sceneObject.outCamera = FreeflyCamera(translate, phi, theta);
 	return sceneObject;
 }
 
@@ -69,6 +70,7 @@ void Application::resetDemoSceneObject(DemoSceneObject & sceneObject, glm::vec3 
 	sceneObject.fPsi = 0;
 	computeDirectionVectorsDemoSceneObject(sceneObject);
 	sceneObject.camera = FreeflyCamera(translate, phi, theta);
+	sceneObject.outCamera = FreeflyCamera(translate, phi, theta);
 }
 
 Application::DemoSceneObject Application::createDemoSceneObject(const glmlv::fs::path & objPath) {
@@ -121,6 +123,19 @@ void Application::moveDemoSceneObject(DemoSceneObject & sceneObject, float speed
 	sceneObject.camera.setHorizontalAngle(sceneObject.fPhi);
 	sceneObject.camera.setVerticalAngle(sceneObject.fTheta);
 	sceneObject.camera.setFrontAngle(sceneObject.fPsi);
+	
+	
+	glm::mat4 psiRotation = glm::rotate(glm::mat4(1.f), (sceneObject.fPsi), sceneObject.FrontVector);
+	glm::vec3 lv = glm::vec3(glm::vec4(sceneObject.LeftVector,0) * psiRotation);
+	glm::vec3 uv = glm::vec3(glm::vec4(sceneObject.UpVector,0) * psiRotation);
+	glm::vec3 fv = glm::vec3(glm::vec4(sceneObject.FrontVector,0) * psiRotation);
+	glm::vec3 pos = sceneObject.Position * sceneObject.scale 
+		+ 27.5f*lv
+		+ 20.f*uv
+		- 10.f*fv
+	;
+	glm::vec3 targetpos = pos - lv;
+	sceneObject.OutCamera = glm::lookAt(pos, targetpos, uv);
 }
 
 glm::mat4 Application::getTransformationMatrixDemoSceneObject(const DemoSceneObject & sceneObject) {
@@ -1060,8 +1075,10 @@ void Application::animationsetCamera(unsigned long iteration) {
 	else if (indexcam == 2)
 		currentViewMatrix = m_sceneObjects[SceneObjectArc170].camera.getViewMatrix();
 	else if (indexcam == 3)
-		currentViewMatrix = m_sceneObjects[SceneObjectTieFighter_1].camera.getViewMatrix();
+		currentViewMatrix = m_sceneObjects[SceneObjectArc170].OutCamera;
 	else if (indexcam == 4)
+		currentViewMatrix = m_sceneObjects[SceneObjectTieFighter_1].camera.getViewMatrix();
+	else if (indexcam == 5)
 		currentViewMatrix = innerArcCamera.getViewMatrix();
 	else
 		currentViewMatrix = innerTieCamera.getViewMatrix();
@@ -1208,7 +1225,7 @@ int Application::run()
             ImGui::Text("Iteration : %ld", iteration);
             ImGui::Separator();
             if (ImGui::Button("Camera")) {
-				indexcam = (indexcam + 1)%6;
+				indexcam = (indexcam + 1)%7;
 			}
             if (ImGui::Button("Effect")) {
 				currentEffect = static_cast<PostEffect>((currentEffect+1)%PostEffectCount);

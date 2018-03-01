@@ -85,7 +85,6 @@ void FreeflyCamera::computeDirectionVectors() {
 	                          std::sin(m_fTheta),
 	                          std::cos(m_fTheta) * std::cos(m_fPhi));
 	m_UpVector = glm::cross(m_FrontVector, m_LeftVector);
-	m_ViewMatrix = glm::rotate(glm::mat4(1.f), (-m_fPsi), glm::vec3(0,0,1))*glm::lookAt(m_Position, m_Position + m_FrontVector, m_UpVector);
 }
 
 glm::mat4 FreeflyCamera::getViewMatrix() const {
