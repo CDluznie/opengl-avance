@@ -14,6 +14,7 @@ layout (std430, binding=1) buffer LightInfos {
 
 uniform sampler2D uGPosition;
 uniform sampler2D uGNormal;
+uniform sampler2D uGDepth;
 uniform sampler2D uGAmbient;
 uniform sampler2D uGDiffuse;
 uniform sampler2D uGGlossyShininess;
@@ -46,6 +47,12 @@ vec2 poissonDisk[16] = vec2[](
     vec2( 0.19984126, 0.78641367 ),
     vec2( 0.14383161, -0.14100790 )
 );
+
+int kernelSize = 14;
+uniform vec3 uKernels[14];
+uniform vec3 uNoiseVec;
+uniform mat4 uProjectionMat;
+uniform sampler2D uTexNoise;	
 
 float random(vec4 seed) {
     float dot_product = dot(seed, vec4(12.9898,78.233,45.164,94.673));
@@ -82,6 +89,58 @@ void main() {
 	}
 	dirLightVisibility /= dirSampleCountf;
 
+	float uRadius = 10;
+	float bias = 0.15;
+	
+	
+	// SSAO
+	
+	/*
+	float depth = texelFetch(uGDepth, ivec2(gl_FragCoord.xy), 0).x;
+
+	
+	float www = 1280;
+	float hhh = 720;
+    vec2 TexCoords = gl_FragCoord.xy * vec2(1/www,1/hhh);
+	vec2 noiseScale = vec2(www/4.0, hhh/4.0);
+	vec3 randomVec = texture(uTexNoise, TexCoords * noiseScale).xyz;  
+	
+	
+	vec3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
+	vec3 bitangent = cross(normal, tangent);
+	mat3 tbn = mat3(tangent, bitangent, normal);  
+	
+	float occlusion = 0.0;
+	
+	vec2 texelSize = 1.0 / vec2(www,hhh);
+    float result = 0.0;
+    for (int x = -2; x < 2; ++x) {
+        for (int y = -2; y < 2; ++y) {
+            vec2 offset = vec2(float(x), float(y)) * texelSize;
+            //result += texture(ssaoInput, TexCoords + offset).r;
+            float occlusion = 0;
+            for(int i = 0; i < kernelSize; ++i) {
+				
+				vec3 sampleRay = tbn * uKernels[i] * uRadius + position;
+				
+				vec4 offsetScreen = uProjectionMat * vec4(sampleRay.xyz, 1);
+				vec3 offsetNDC = vec3(offsetScreen / offsetScreen.w) * 0.5 + 0.5;
+				
+				
+				float sampleDepth = texture(uGPosition, offsetNDC.xy).z;
+				
+				float rangeCheck = smoothstep(0.0, 1.0, uRadius / abs(position.z - sampleDepth));
+				occlusion += (sampleDepth >= sampleRay.z + bias ? 1.0 : 0.0) * rangeCheck;  
+		   
+			}
+			occlusion = 1.0 - (occlusion/kernelSize);
+			result += occlusion;
+        }
+    }
+    occlusion = result / (4.0 * 4.0);
+	*/
+	
+
 	// Directional lights
 
 	vec3 CumulatedDirectionalLight = vec3(0);
@@ -107,6 +166,12 @@ void main() {
 		CumulatedPointLight += blinnPhong(position, normal, diffuse, glossy, shininess, dirToPointLight, intensityToPointLight);
 	}
 	
-	fColor = CumulatedDirectionalLight + CumulatedPointLight + 0.25*ambient;
-
+	 
+	//fColor = occlusion*(CumulatedDirectionalLight + CumulatedPointLight) + 0.25*ambient;
+	fColor = (CumulatedDirectionalLight + CumulatedPointLight) + 0.25*ambient;
+		
+	
 }
+
+
+

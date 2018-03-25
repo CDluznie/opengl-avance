@@ -80,20 +80,30 @@ private:
     FreeflyCamera innerArcCamera;
     FreeflyCamera innerTieCamera;
      std::vector<glm::vec3> DirectionalLightDirs = {
-		glm::vec3(0,1,0)
+		glm::vec3(0,1,0),
+		glm::vec3(1.f,1.f,0.f)
 	};
     std::vector<glm::vec3> DirectionalLightIntensities = {
-		glm::vec3(0.4)
+		glm::vec3(0.1),
+		glm::vec3(0.25f,0.125f,0.f)
 	};
     std::vector<glm::vec3> PointLightPositions = {
 		glm::vec3(20,-2770,-65),
 		glm::vec3(-30,-2770,-65),
-		glm::vec3(0,-630,-25)
+		glm::vec3(0,-630,-25),
+		
+		glm::vec3(0.f,200.f,0.f),
+		glm::vec3(1200.f,150.f,-25.f),
+		glm::vec3(-1325.f,150.f,-25.f)
 	};
     std::vector<glm::vec3> PointLightIntensities = {
 		glm::vec3(2000,0,0),
 		glm::vec3(2000,0,0),
-		glm::vec3(0,1000,0)
+		glm::vec3(0,1000,0),
+		
+		glm::vec3(20000.f),
+		glm::vec3(0.f,0.f,50000.f),
+		glm::vec3(50000.f,0.f,0.f)
 	};
     glm::mat4 currentViewMatrix;
     glmlv::ViewController viewController;
@@ -116,6 +126,12 @@ private:
 	GLuint m_GBufferTextures[GBufferTextureCount];
 	const GLenum m_GBufferTextureFormat[GBufferTextureCount] = { GL_RGB32F, GL_RGB32F, GL_RGB32F, GL_RGB32F, GL_RGBA32F, GL_DEPTH_COMPONENT32F };
     
+    int kernelSize = 14;
+	std::vector<float> kernels;
+	
+	int noiseSize = 4;
+	std::vector<glm::vec3> noise;
+    
     GLuint m_FBO;
     
 	glm::vec3 m_bboxMin;
@@ -125,6 +141,9 @@ private:
     GLuint m_default_tex_object;
 
 	GLuint m_samplerObject;
+	
+	GLuint noiseTexture;
+	GLuint samplerNoise;
 
 	GLuint m_directionalSMTexture;
 	GLuint m_directionalSMFBO;
@@ -159,6 +178,7 @@ private:
 	GLint uShininessSampler;
 	GLint uGPosition;
 	GLint uGNormal;
+	GLint uGDepth;
 	GLint uGAmbient;
 	GLint uGDiffuse;
 	GLint uGGlossyShininess;
@@ -172,6 +192,9 @@ private:
 	GLint uDirLightShadowMapSpread;
 	GLint uGammaExponent;
 	GLint uAlpha;
+	GLint uKernels;
+	GLint uNoiseVec;/////////
+	GLint uTexNoise;
 	
 	GLuint ssboLightInfos;
 
@@ -222,5 +245,8 @@ private:
 	void animationLights(unsigned long iteration);
 	void animationEffect(unsigned long iteration);
 	void animationSceneObjects(unsigned long iteration);
+
+	glm::mat4 toto;
+	GLint uProjMat;
 
 };

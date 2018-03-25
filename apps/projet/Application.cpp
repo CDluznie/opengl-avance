@@ -192,6 +192,9 @@ void Application::geometryPass(const glm::mat4 & ProjMatrix, const glm::mat4 & V
 		glm::mat4 MVMatrix = ViewMatrix* getTransformationMatrixDemoSceneObject(sceneObject);
 		glm::mat4 NormalMatrix = glm::transpose(glm::inverse(MVMatrix));
 	        
+	        
+	    toto = ProjMatrix;    
+	        
 		glUniformMatrix4fv(uModelViewProjMatrix, 1, GL_FALSE, glm::value_ptr(ProjMatrix * MVMatrix));
 		glUniformMatrix4fv(uModelViewMatrix, 1, GL_FALSE, glm::value_ptr(MVMatrix));
 		glUniformMatrix4fv(uNormalMatrix, 1, GL_FALSE, glm::value_ptr(NormalMatrix));
@@ -259,6 +262,10 @@ void Application::geometryPass(const glm::mat4 & ProjMatrix, const glm::mat4 & V
 
 }
 
+float RandomFloat(float min, float max) {
+    return  (max - min) * ((((float) rand()) / (float) RAND_MAX)) + min ;
+}
+
 void Application::shadingPass(
 	const std::vector<glm::vec3> & DirectionalLightDirs, const std::vector<glm::vec3> & DirectionalLightIntensities,
 	const std::vector<glm::vec3> & PointLightPositions, const std::vector<glm::vec3> & PointLightIntensities,
@@ -267,6 +274,7 @@ void Application::shadingPass(
 	const glm::mat4 & dirLightProjMatrix, const glm::mat4 & dirLightViewMatrix,
 	float shadowMapBias, int shadowMapSampleCount, float shadowMapSpread
 ) {
+	
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
@@ -280,6 +288,19 @@ void Application::shadingPass(
 	glUniform1i(uGAmbient, 2);
 	glUniform1i(uGDiffuse, 3);
 	glUniform1i(uGGlossyShininess, 4);
+	glUniform1i(uGDepth, 6);
+	
+	glUniform1i(uGDepth, 7);
+        
+        
+    glUniformMatrix4fv(uProjMat, 1, GL_FALSE, glm::value_ptr(toto));    
+    
+    glUniform3fv(uKernels, kernelSize, (kernels.data()));
+ 
+ 
+	glBindSampler(7, samplerNoise);
+ 
+    glUniform3fv(uNoiseVec, 1, glm::value_ptr(noise[0])); //TODO use only 0
         
 		
 	glActiveTexture(GL_TEXTURE0);
@@ -291,7 +312,11 @@ void Application::shadingPass(
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[GDiffuse]);
 	glActiveTexture(GL_TEXTURE4);
-	glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[GGlossyShininess]);
+	glBindTexture(GL_TEXTURE_2D, noiseTexture);
+	glActiveTexture(GL_TEXTURE6);
+	glBindTexture(GL_TEXTURE_2D, m_GBufferTextures[GDepth]);
+	glActiveTexture(GL_TEXTURE7);
+	glBindTexture(GL_TEXTURE_2D, noiseTexture);
 
 	LightInfos lightInfos;
 	for (int i = 0; i < DirectionalLightDirs.size(); i++) {
@@ -1083,7 +1108,9 @@ void Application::animationsetCamera(unsigned long iteration) {
 		currentViewMatrix = innerArcCamera.getViewMatrix();
 	else
 		currentViewMatrix = innerTieCamera.getViewMatrix();
-	*/
+	return;*/
+	
+	
 	if (iteration <= 350) {
 		currentViewMatrix = followCamera.getViewMatrix();
 	} else if (iteration <= 850) {
@@ -1091,6 +1118,7 @@ void Application::animationsetCamera(unsigned long iteration) {
 	} else if (iteration <= 1550) {
 		currentViewMatrix =  m_sceneObjects[SceneObjectArc170].OutCamera;
 	} else if (iteration <= 2420) {
+		currentViewMatrix = innerArcCamera.getViewMatrix();
 		currentViewMatrix = innerArcCamera.getViewMatrix();
 	} else if (iteration <= 7900) {
 		currentViewMatrix = followCamera.getViewMatrix();
@@ -1152,7 +1180,7 @@ void Application::animationEffect(unsigned long iteration) {
 		currentEffect = PostEffectBlackFade;
 	}
 	int time = 17500;
-	if (time <= iteration ) { //todo sur r2 cam
+	if (time <= iteration ) { 
 		blackFadeAlpha = 1-float(iteration-time)/fadetime;
 		currentEffect = PostEffectBlackFade;
 	}
@@ -1179,14 +1207,14 @@ int Application::run()
     
     float sceneSize = sceneDiagonalSize;
     glm::mat4 ProjMatrix = glm::perspective(glm::radians(70.f), float(m_nWindowWidth)/m_nWindowHeight, 0.005f * sceneDiagonalSize, sceneSize);  // near = 1% de la taille de la scene, far = 100%
-    
+
     bool directionalSMDirty = true;
     
     float shadowMapBias = 0.01f;
-	int shadowMapSampleCount = 20;
-	float shadowMapSpreadCoeff = 15.f;
+	int shadowMapSampleCount = 19;
+	float shadowMapSpreadCoeff = 90.f;
 	float shadowMapSpreadInit = 0.00001*0.3;
-	float shadowMapSpread = shadowMapSpread*shadowMapSpreadCoeff;
+	float shadowMapSpread = shadowMapSpreadInit*shadowMapSpreadCoeff;
 
 	const auto begin_seconds = glfwGetTime();
 	
@@ -1294,7 +1322,7 @@ int Application::run()
 				ImGui::Separator();
 				ImGui::SliderInt("Sample count", &shadowMapSampleCount, 0, 100);
 				ImGui::Separator();
-				ImGui::SliderFloat("Spread", &shadowMapSpreadCoeff, 0, 100, "%f");
+				ImGui::SliderFloat("Spread", &shadowMapSpreadCoeff, 0, 1000, "%f");
 				shadowMapSpread = shadowMapSpreadInit*shadowMapSpreadCoeff;
 				ImGui::TreePop();
 			}
@@ -1461,6 +1489,7 @@ Application::Application(int argc, char** argv):
 	uDirectionalLightNumber = glGetUniformLocation(m_programShadingPass.glId(), "uDirectionalLightNumber");
 	uPointLightNumber = glGetUniformLocation(m_programShadingPass.glId(), "uPointLightNumber");
 	uGPosition = glGetUniformLocation(m_programShadingPass.glId(), "uGPosition");
+	uGDepth = glGetUniformLocation(m_programShadingPass.glId(), "uGDepth");
 	uGNormal = glGetUniformLocation(m_programShadingPass.glId(), "uGNormal");
 	uGAmbient = glGetUniformLocation(m_programShadingPass.glId(), "uGAmbient");
 	uGDiffuse = glGetUniformLocation(m_programShadingPass.glId(), "uGDiffuse");
@@ -1475,6 +1504,11 @@ Application::Application(int argc, char** argv):
 	uDirLightShadowMapSpread = glGetUniformLocation(m_programShadingPass.glId(), "uDirLightShadowMapSpread");
 	uGammaExponent = glGetUniformLocation(m_gammaCorrectionProgram.glId(), "uGammaExponent");
 	uAlpha = glGetUniformLocation(m_blackFadeProgram.glId(), "uAlpha");
+	
+	uProjMat = glGetUniformLocation(m_programShadingPass.glId(), "uProjectionMat");
+	uKernels = glGetUniformLocation(m_programShadingPass.glId(), "uKernels");
+	uNoiseVec = glGetUniformLocation(m_programShadingPass.glId(), "uNoiseVec");
+	uTexNoise = glGetUniformLocation(m_programShadingPass.glId(), "uTexNoise");
 
 	// --- Texture init ---
 	
@@ -1575,6 +1609,45 @@ Application::Application(int argc, char** argv):
 	std::cerr << "Framebuffer post-processing gamma correct status : " << (glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) ==  GL_FRAMEBUFFER_COMPLETE) << std::endl;
 	
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); 
+	
+	for (int i = 0; i < kernelSize; ++i) {
+		glm::vec3 kernel = glm::vec3(
+			RandomFloat(-1.0f, 1.0f),
+			RandomFloat(-1.0f, 1.0f),
+			RandomFloat(0.0f, 1.0f)
+		);
+		kernel = glm::normalize(kernel);
+		kernel *= RandomFloat(0.0f, 1.0f);
+		float scale = float(i) / float(kernelSize);
+		scale = glm::mix(0.1f, 1.0f, scale * scale);
+		kernel *= scale;
+		kernels.push_back(kernel[0]);
+		kernels.push_back(kernel[1]);
+		kernels.push_back(kernel[2]);
+	}
+	
+	noise.resize(16);
+	for (int i = 0; i < 16; ++i) {
+		noise[i] = glm::vec3(
+			RandomFloat(-1.0f, 1.0f),
+			RandomFloat(-1.0f, 1.0f),
+			0.f
+			
+		);
+		noise[i] = glm::normalize(noise[i]);
+	}
+	
+	glGenTextures(1, &noiseTexture);
+	glBindTexture(GL_TEXTURE_2D, noiseTexture);
+	glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB16F, 4, 4);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 4, 4, GL_RGB, GL_FLOAT, noise.data());
+	glBindTexture(GL_TEXTURE_2D, 0);
+	
+	glGenSamplers(1, &samplerNoise);
+	glSamplerParameteri(samplerNoise, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glSamplerParameteri(samplerNoise, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glSamplerParameteri(samplerNoise, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glSamplerParameteri(samplerNoise, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 }
 
